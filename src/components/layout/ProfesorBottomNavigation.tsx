@@ -14,12 +14,6 @@ export function ProfesorBottomNavigation() {
       match: "/profesor/dashboard"
     },
     {
-      href: "/profesor/disponibilidad",
-      icon: "schedule",
-      label: "Disponibilidad",
-      match: "/profesor/disponibilidad"
-    },
-    {
       href: "/profesor/metricas",
       icon: "monitoring",
       label: "Métricas",

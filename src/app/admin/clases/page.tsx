@@ -30,6 +30,13 @@ export default function AdminGestionPage() {
   const [tRoom, setTRoom] = useState("");
   const [tStartTime, setTStartTime] = useState("18:00");
   const [tEndTime, setTEndTime] = useState("19:15");
+  const [tDays, setTDays] = useState<string[]>([]);
+
+  const toggleTDay = (day: string) => {
+    setTDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
 
   // STAFF STATE
   const [profesores, setProfesores] = useState<Profile[]>([]);
@@ -215,23 +222,29 @@ export default function AdminGestionPage() {
     e.preventDefault();
     if (!supabase) return;
     
-    const daysOfWeekMap = { "Dom": 0, "Lun": 1, "Mar": 2, "Mié": 3, "Jue": 4, "Vie": 5, "Sáb": 6 };
-    const targetDay = daysOfWeekMap[selectedDay as keyof typeof daysOfWeekMap];
+    if (tDays.length === 0) {
+      alert("Por favor selecciona al menos un día para este bloque.");
+      return;
+    }
 
-    const { error } = await supabase.from('plantillas_clase').insert([{
-      dia_semana: targetDay,
+    const daysOfWeekMap = { "Dom": 0, "Lun": 1, "Mar": 2, "Mié": 3, "Jue": 4, "Vie": 5, "Sáb": 6 };
+    
+    const inserts = tDays.map(dayStr => ({
+      dia_semana: daysOfWeekMap[dayStr as keyof typeof daysOfWeekMap],
       hora_inicio: tStartTime + ":00",
       hora_fin: tEndTime + ":00",
       nombre_clase: tName,
       id_profesor: tProf || null,
       sala: tRoom,
       cupo_maximo: 8
-    }]);
+    }));
+
+    const { error } = await supabase.from('plantillas_clase').insert(inserts);
 
     if (error) {
       alert("Error al guardar plantilla. ¿Ejecutaste el script horarios_fijos.sql en Supabase?");
     } else {
-      showToast("Bloque de horario añadido.");
+      showToast("Bloque(s) de horario añadido(s).");
       setIsAddingTemplate(false);
       setTName("");
       fetchPlantillas();
@@ -262,7 +275,10 @@ export default function AdminGestionPage() {
           )}
           {activeTab === "calendar" && (
             <button 
-              onClick={() => setIsAddingTemplate(true)}
+              onClick={() => {
+                setTDays([selectedDay]);
+                setIsAddingTemplate(true);
+              }}
               className="px-3 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
@@ -411,12 +427,28 @@ export default function AdminGestionPage() {
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
           <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-headline-md font-bold text-on-surface">Nuevo Bloque ({selectedDay})</h3>
+              <h3 className="font-headline-md font-bold text-on-surface">Nuevo Bloque Múltiple</h3>
               <button onClick={() => setIsAddingTemplate(false)} className="w-8 h-8 flex items-center justify-center bg-surface-container rounded-full">
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
             <form onSubmit={handleAddTemplate} className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-bold text-secondary mb-1 block">Días de la semana</label>
+                <div className="flex flex-wrap gap-2">
+                  {daysFilter.map(day => (
+                    <button 
+                      key={day} 
+                      type="button" 
+                      onClick={() => toggleTDay(day)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${tDays.includes(day) ? 'bg-[#D4AF37] text-white' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-secondary mb-1 block">Disciplina / Nivel</label>
                 <select required value={tName} onChange={e => setTName(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none appearance-none">
