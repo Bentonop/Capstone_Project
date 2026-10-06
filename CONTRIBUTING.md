@@ -9,6 +9,30 @@ Este documento establece las reglas fundamentales de desarrollo colaborativo par
 * **Commits semánticos:** Queda prohibido usar el botón de subir archivos desde la web con mensajes genéricos. Se debe usar la terminal o editor de código para enviar *commits* que expliquen qué cambió exactamente (ej. `feat: agregar script de conexión a PostgreSQL`, `fix: reparar botón de reserva`, `docs: actualizar README`).
 * **Integración mediante Pull Requests (PR):** Para pasar el código de una rama de trabajo a `main`, se debe abrir un PR en GitHub. Esto permite que los compañeros revisen el código, detecten errores y lo aprueben antes de fusionarlo.
 
+## 📝 Convenciones de Nomenclatura (Para el equipo nuevo)
+
+Dado que somos nuevos usando Git Flow, debemos usar **Nombres Semánticos** para nuestras Ramas y Commits. Esto nos permite saber exactamente qué hace un cambio con solo leer la primera palabra.
+
+### Tipos de Ramas y Commits permitidos:
+
+* **`feat`** (Feature / Funcionalidad): Úsalo cuando agregas algo NUEVO a la aplicación (ej. una nueva pantalla, un nuevo botón, una nueva tabla en base de datos).
+  * *Rama:* `git checkout -b feat/pantalla-login`
+  * *Commit:* `git commit -m "feat: crear pantalla de login de usuarios"`
+* **`fix`** (Arreglo): Úsalo EXCLUSIVAMENTE cuando corrijas un error, un fallo o un bug.
+  * *Rama:* `git checkout -b fix/error-botones`
+  * *Commit:* `git commit -m "fix: corregir botones que no hacían clic en el perfil"`
+* **`chore`** (Mantenimiento / Tareas): Úsalo para cambios de organización, limpieza, mover archivos, actualizar herramientas, cosas que no cambian el código funcional de la aplicación.
+  * *Rama:* `git checkout -b chore/limpieza-carpetas`
+  * *Commit:* `git commit -m "chore: mover documentos de la Fase 1 a la carpeta docs_universidad"`
+* **`docs`** (Documentación): Úsalo cuando edites guías, archivos README o añadas comentarios para que los demás lean.
+  * *Rama:* `git checkout -b docs/mejorar-guia`
+  * *Commit:* `git commit -m "docs: actualizar instrucciones en el archivo CONTRIBUTING.md"`
+* **`style`** (Estilos): Úsalo cuando modifiques la apariencia visual (CSS/Tailwind) sin cambiar la lógica interna.
+  * *Rama:* `git checkout -b style/colores-botones`
+  * *Commit:* `git commit -m "style: aplicar color verde neón a todos los botones principales"`
+
+**Regla de oro antes de escribir:** *¿Estoy agregando algo nuevo (feat), arreglando algo roto (fix) o solo limpiando/organizando (chore)?*
+
 ## Cómo Funciona (Ciclo de Ejecución)
 
 Para cada nueva tarea asignada en el proyecto, se debe seguir este flujo exacto:
