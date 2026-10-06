@@ -77,7 +77,18 @@ export default function ProfesorDashboardPage() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const mappedClasses: ClassSession[] = data.map((c: any) => {
+          const now = new Date();
+          const isToday = selectedDate.toDateString() === now.toDateString();
+          
+          const filteredData = data.filter((c: any) => {
+            if (isToday) {
+              const end = new Date(c.fecha_hora_fin);
+              return end > now;
+            }
+            return true;
+          });
+
+          const mappedClasses: ClassSession[] = filteredData.map((c: any) => {
             const start = new Date(c.fecha_hora_inicio);
             const end = new Date(c.fecha_hora_fin);
             const duration = Math.round((end.getTime() - start.getTime()) / 60000);
