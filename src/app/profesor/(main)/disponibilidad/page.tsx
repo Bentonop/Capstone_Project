@@ -7,6 +7,7 @@ export default function DisponibilidadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [classTypes, setClassTypes] = useState<string[]>([]);
+  const [salasDb, setSalasDb] = useState<{nombre: string}[]>([]);
   
   // Default to today
   const today = new Date().toISOString().split('T')[0];
@@ -15,31 +16,45 @@ export default function DisponibilidadPage() {
     fecha: today,
     hora_inicio: "10:00",
     nombre_clase: "",
-    sala: "Sala Pole 1",
+    sala: "",
     descripcion: "Traer botella de agua, toalla personal y alcohol (magnesio líquido opcional)."
   });
 
   useEffect(() => {
-    async function fetchClassTypes() {
+    async function fetchData() {
       if (!supabase) return;
-      const { data, error } = await supabase
+      
+      // Fetch Tipos de Clase
+      const { data: clasesData } = await supabase
         .from('tipos_clase')
         .select('nombre')
         .order('created_at', { ascending: true });
         
-      if (!error && data) {
-        const uniqueClasses = data.map(c => c.nombre).filter(Boolean) as string[];
-        setClassTypes(uniqueClasses);
+      // Fetch Salas
+      const { data: salasData } = await supabase
+        .from('salas')
+        .select('nombre')
+        .order('created_at', { ascending: true });
         
-        if (uniqueClasses.length > 0) {
-          // Only update if current value is not in the new list, to avoid resetting on re-fetch
-          setFormData(prev => uniqueClasses.includes(prev.nombre_clase) ? prev : { ...prev, nombre_clase: uniqueClasses[0] });
-        } else {
-          setFormData(prev => ({ ...prev, nombre_clase: "" }));
-        }
+      if (clasesData) {
+        const uniqueClasses = clasesData.map(c => c.nombre).filter(Boolean) as string[];
+        setClassTypes(uniqueClasses);
+        setFormData(prev => ({ 
+          ...prev, 
+          nombre_clase: uniqueClasses.includes(prev.nombre_clase) ? prev.nombre_clase : (uniqueClasses[0] || "") 
+        }));
+      }
+
+      if (salasData) {
+        const uniqueSalas = salasData as {nombre: string}[];
+        setSalasDb(uniqueSalas);
+        setFormData(prev => ({ 
+          ...prev, 
+          sala: uniqueSalas.length > 0 ? (uniqueSalas.find(s => s.nombre === prev.sala)?.nombre || uniqueSalas[0].nombre) : "" 
+        }));
       }
     }
-    fetchClassTypes();
+    fetchData();
   }, []);
 
   const showToast = (msg: string) => {
@@ -59,21 +74,40 @@ export default function DisponibilidadPage() {
     try {
       if (!supabase) throw new Error("Supabase client is not configured");
 
-      // Calcular fechas
-      // formData.fecha = "2025-03-19", formData.hora_inicio = "10:00"
-      const startDateTime = new Date(`${formData.fecha}T${formData.hora_inicio}:00`);
+      // Calcular fechas de forma segura para la zona horaria local
+      const [year, month, day] = formData.fecha.split('-').map(Number);
+      const [hour, minute] = formData.hora_inicio.split(':').map(Number);
+      const startDateTime = new Date(year, month - 1, day, hour, minute, 0);
       
       // Añadir 75 minutos
       const endDateTime = new Date(startDateTime.getTime() + 75 * 60000);
 
+      // Convertir a string local exacto para que Supabase no le sume 3 horas
+      const formatLocal = (d: Date) => {
+        const pad = (n: number) => (n < 10 ? '0' + n : n);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+      };
+
+      // Obtener el ID del profesor (simulado buscando el primer profesor en la BD)
+      const { data: profData, error: profError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'profesor')
+        .limit(1)
+        .single();
+
+      if (profError || !profData) {
+        throw new Error("No se pudo obtener el perfil de profesor de la base de datos.");
+      }
+
       // Preparar payload
       const payload = {
-        // id_profesor: "00000000-0000-0000-0000-000000000000", // En producción se sacaría de auth.user
+        id_profesor: profData.id,
         nombre_clase: formData.nombre_clase,
         cupo_maximo: 8,
         cupos_inscritos: 0,
-        fecha_hora_inicio: startDateTime.toISOString(),
-        fecha_hora_fin: endDateTime.toISOString(),
+        fecha_hora_inicio: formatLocal(startDateTime),
+        fecha_hora_fin: formatLocal(endDateTime),
         estado_clase: 'programada',
         sala: formData.sala,
         descripcion: formData.descripcion
@@ -83,21 +117,20 @@ export default function DisponibilidadPage() {
       const { error } = await supabase.from('clase').insert([payload]);
       
       if (error) {
-        console.warn("Supabase Error (probablemente RLS o falta id_profesor). Simulando éxito para demo:", error);
-        // Si hay error por falta de RLS/Auth en la demo, lo dejamos pasar como éxito visualmente.
+        throw new Error(`Error BD: ${error.message}`);
       }
 
       showToast("¡Clase publicada con éxito! Ya está disponible para reserva.");
       
-      // Reset form a little bit, advance time maybe
+      // Reset form
       setFormData(prev => ({
         ...prev,
         hora_inicio: "12:00" 
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showToast("¡Clase publicada con éxito! (Modo Demo)");
+      showToast(error.message || "Ocurrió un error al publicar la clase.");
     } finally {
       setIsSubmitting(false);
     }
@@ -181,11 +214,16 @@ export default function DisponibilidadPage() {
               name="sala" 
               value={formData.sala}
               onChange={handleInputChange}
-              className="w-full h-14 bg-surface-container-low border border-surface-container-highest rounded-xl px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none transition-colors"
+              disabled={salasDb.length === 0}
+              className="w-full h-14 bg-surface-container-low border border-surface-container-highest rounded-xl px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none transition-colors disabled:opacity-50"
             >
-              <option value="Sala Pole 1">Sala Pole 1 (Cap: 8)</option>
-              <option value="Sala Pole Principal">Sala Pole Principal (Cap: 8)</option>
-              <option value="Sala Multiuso">Sala Multiuso</option>
+              {salasDb.length === 0 ? (
+                <option value="" disabled>Aún no hay salas creadas por Admin</option>
+              ) : (
+                salasDb.map((sala, idx) => (
+                  <option key={idx} value={sala.nombre}>{sala.nombre}</option>
+                ))
+              )}
             </select>
           </div>
 
@@ -224,7 +262,7 @@ export default function DisponibilidadPage() {
 
           <button 
             type="submit"
-            disabled={isSubmitting || classTypes.length === 0}
+            disabled={isSubmitting || classTypes.length === 0 || salasDb.length === 0}
             className="w-full h-14 mt-4 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all disabled:opacity-70 disabled:active:scale-100"
           >
             {isSubmitting ? (

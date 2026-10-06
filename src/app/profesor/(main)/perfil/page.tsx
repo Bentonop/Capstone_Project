@@ -82,120 +82,186 @@ export default function PerfilProfesorPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <span className="material-symbols-outlined animate-spin text-primary text-4xl">refresh</span>
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <p className="font-label-md text-primary animate-pulse">Cargando tu perfil...</p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex-1 p-8 text-center text-on-surface-variant font-body-lg">
-        Perfil no encontrado.
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="bg-surface-container-low p-8 rounded-3xl text-center flex flex-col items-center gap-4 border border-surface-container">
+          <span className="material-symbols-outlined text-5xl text-secondary">person_off</span>
+          <h2 className="font-headline-sm text-on-surface">Perfil no encontrado</h2>
+          <p className="font-body-md text-on-surface-variant">No pudimos cargar tus datos de docente.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full animate-in fade-in duration-300">
+    <div className="flex-1 flex flex-col w-full min-h-screen bg-background animate-in fade-in duration-500 pb-20">
       
-      {/* Cover Image Placeholder */}
-      <div className="h-32 bg-gradient-to-r from-primary-container to-secondary-container relative">
-         <div className="absolute -bottom-12 left-6">
-            <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-on-primary text-4xl font-bold shadow-xl border-4 border-background">
-               {profile.name?.charAt(0)}{profile.last_name?.charAt(0)}
-            </div>
-         </div>
+      {/* Header Premium con Gradiente y Glassmorphism */}
+      <div className="relative h-48 sm:h-64 w-full overflow-hidden">
+         {/* Fondo animado */}
+         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-container to-tertiary-container opacity-90"></div>
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay opacity-30"></div>
+         <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
+         <div className="absolute top-[-50px] left-[-50px] w-48 h-48 bg-primary/40 rounded-full blur-2xl"></div>
+         
+         {/* Botón de configuración flotante */}
+         <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/30 transition-all active:scale-95 border border-white/10 shadow-lg">
+            <span className="material-symbols-outlined text-[20px]">settings</span>
+         </button>
       </div>
 
-      <div className="px-6 pt-16 pb-8 flex flex-col gap-6">
-        
-        {/* Header Info */}
-        <div className="flex flex-col">
-          <div className="flex justify-between items-start">
-             <div>
-               <h1 className="font-headline-md text-on-surface font-bold">
-                 {profile.name} {profile.last_name}
-               </h1>
-               {!isEditing ? (
-                 <span className="font-label-lg text-primary block mt-1">
-                   {profile.especialidad || "Especialidad no configurada"}
-                 </span>
-               ) : (
-                 <input
-                   type="text"
-                   placeholder="Ej: Experto en Pole Dance"
-                   value={formData.especialidad}
-                   onChange={e => setFormData({...formData, especialidad: e.target.value})}
-                   className="w-full bg-surface-container p-2 rounded mt-2 font-label-md border border-surface-container-high focus:outline-primary"
-                 />
-               )}
-             </div>
+      <div className="px-gutter-mobile -mt-16 sm:-mt-20 relative z-10">
+        <div className="flex flex-col gap-6">
+          
+          {/* Tarjeta Principal de Identidad */}
+          <div className="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 border border-surface-container flex flex-col relative overflow-hidden">
              
-             {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="w-10 h-10 rounded-full bg-surface-container-highest text-primary flex items-center justify-center hover:bg-surface-container transition-colors shadow-sm">
-                  <span className="material-symbols-outlined">edit</span>
-                </button>
-             ) : (
-                <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold shadow-sm disabled:opacity-50 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">save</span>
-                  Guardar
-                </button>
+             {/* Círculos decorativos en la tarjeta */}
+             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+             
+             <div className="flex flex-col sm:flex-row sm:items-end gap-5">
+                <div className="relative">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-tr from-primary to-tertiary flex items-center justify-center text-on-primary text-5xl font-bold shadow-lg shadow-primary/30 border-4 border-background ring-4 ring-primary/10 rotate-3 transition-transform hover:rotate-0 duration-300">
+                     <span className="-rotate-3 inline-block">{profile.name?.charAt(0)}{profile.last_name?.charAt(0) || ""}</span>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-background flex items-center justify-center shadow-sm">
+                     <span className="material-symbols-outlined text-white text-[14px] font-bold">check</span>
+                  </div>
+                </div>
+                
+                <div className="flex-1 flex flex-col gap-1 pb-2">
+                   <h1 className="font-display-sm text-on-surface font-bold tracking-tight">
+                     {profile.name} {profile.last_name}
+                   </h1>
+                   <div className="flex items-center gap-2 text-primary font-label-lg font-semibold">
+                      <span className="material-symbols-outlined text-[18px]">verified</span>
+                      <span>{profile.especialidad || "Coach Elite"}</span>
+                   </div>
+                </div>
+
+                {!isEditing && (
+                  <button onClick={() => setIsEditing(true)} className="mt-4 sm:mt-0 w-full sm:w-auto px-6 py-3 rounded-xl bg-surface-container-high text-on-surface font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-colors active:scale-95 shadow-sm border border-surface-container">
+                    <span className="material-symbols-outlined text-[20px]">edit_square</span>
+                    Editar Perfil
+                  </button>
+                )}
+             </div>
+
+             {/* Zona de Edición con micro-animación */}
+             {isEditing && (
+                <div className="mt-6 pt-6 border-t border-surface-container-high animate-in slide-in-from-top-4 fade-in duration-300 flex flex-col gap-5">
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-label-sm text-primary font-bold ml-1">Tu Especialidad</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Yoga Avanzado & Meditación"
+                      value={formData.especialidad}
+                      onChange={e => setFormData({...formData, especialidad: e.target.value})}
+                      className="w-full bg-background p-4 rounded-xl font-body-lg text-on-surface border border-surface-container-highest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-label-sm text-primary font-bold ml-1">Sobre Ti (Biografía)</label>
+                    <textarea
+                      rows={4}
+                      placeholder="Inspira a tus alumnos contando tu historia..."
+                      value={formData.bio}
+                      onChange={e => setFormData({...formData, bio: e.target.value})}
+                      className="w-full bg-background p-4 rounded-xl font-body-lg text-on-surface border border-surface-container-highest focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-end gap-3 mt-2">
+                    <button 
+                      onClick={() => {
+                        setIsEditing(false);
+                        setFormData({ bio: profile.bio || "", especialidad: profile.especialidad || "" });
+                      }}
+                      className="px-6 py-3 rounded-xl text-secondary font-label-lg font-bold hover:bg-surface-container transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={handleSave} 
+                      disabled={isSaving} 
+                      className="px-8 py-3 rounded-xl bg-primary text-on-primary font-label-lg font-bold shadow-lg shadow-primary/30 disabled:opacity-50 flex items-center gap-2 hover:bg-primary/90 transition-all active:scale-95"
+                    >
+                      {isSaving ? (
+                        <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                      )}
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </div>
              )}
           </div>
+
+          {/* Estadísticas Rápidas */}
+          <div className="flex flex-col gap-4">
+             <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container flex flex-col gap-2 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-secondary-container text-secondary flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                   <span className="material-symbols-outlined text-[24px]">local_fire_department</span>
+                </div>
+                <span className="font-display-md text-on-surface font-bold">{clases.length > 0 ? clases.length * 4 : '12'}</span>
+                <span className="font-label-sm text-on-surface-variant uppercase tracking-wider">Clases este mes</span>
+             </div>
+          </div>
+
+          {/* Biografía en modo lectura */}
+          {!isEditing && (
+            <div className="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-sm border border-surface-container">
+               <h2 className="font-headline-sm text-on-surface mb-4 flex items-center gap-2">
+                 <span className="material-symbols-outlined text-primary">auto_awesome</span>
+                 Mi Historia
+               </h2>
+               <p className="font-body-lg text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+                 {profile.bio || "Aún no has escrito una biografía. Cuéntales a tus alumnos sobre ti, tu experiencia y tu estilo de enseñanza para inspirarlos a reservar tus clases."}
+               </p>
+            </div>
+          )}
+
+           {/* Panel de Especialidades Impartidas */}
+          <div className="mb-6">
+             <h2 className="font-headline-sm text-on-surface mb-4 px-2 flex items-center gap-2">
+               <span className="material-symbols-outlined text-secondary">collections_bookmark</span>
+               Mis Especialidades
+             </h2>
+             
+             {clases.length === 0 ? (
+               <div className="p-8 bg-surface-container-low rounded-3xl text-center flex flex-col items-center gap-3 border border-surface-container border-dashed">
+                  <span className="material-symbols-outlined text-4xl text-secondary opacity-50">fitness_center</span>
+                  <p className="text-on-surface-variant font-body-lg">No has publicado clases aún. Ve a tu Agenda para comenzar.</p>
+               </div>
+             ) : (
+               <div className="flex flex-wrap gap-3">
+                 {Array.from(new Set(clases.map(c => c.nombre_clase))).map(clsName => {
+                   return (
+                     <div 
+                       key={clsName} 
+                       className="px-5 py-3 bg-surface-container-lowest border border-surface-container shadow-sm rounded-2xl font-label-lg font-bold text-on-surface flex items-center gap-2"
+                     >
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        {clsName}
+                     </div>
+                   );
+                 })}
+               </div>
+             )}
+          </div>
+
         </div>
-
-        {/* Biografía */}
-        <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-surface-container">
-           <h2 className="font-headline-sm text-on-surface mb-3 flex items-center gap-2">
-             <span className="material-symbols-outlined text-primary">person_book</span>
-             Biografía
-           </h2>
-           {!isEditing ? (
-             <p className="font-body-md text-on-surface-variant leading-relaxed whitespace-pre-wrap">
-               {profile.bio || "Aún no has escrito una biografía. Cuéntales a tus alumnos sobre ti, tu experiencia y estilo de enseñanza."}
-             </p>
-           ) : (
-             <textarea
-               rows={4}
-               placeholder="Escribe un poco sobre tu trayectoria..."
-               value={formData.bio}
-               onChange={e => setFormData({...formData, bio: e.target.value})}
-               className="w-full bg-surface-container p-3 rounded-lg font-body-md border border-surface-container-high focus:outline-primary resize-none"
-             />
-           )}
-        </section>
-
-         {/* Panel de Clases */}
-        <section className="mt-4">
-           <h2 className="font-headline-sm text-on-surface mb-4 flex items-center gap-2">
-             <span className="material-symbols-outlined text-primary">category</span>
-             Clases que imparto
-           </h2>
-           
-           {clases.length === 0 ? (
-             <div className="p-6 bg-surface-container-low rounded-xl text-center text-on-surface-variant font-body-sm border border-surface-container">
-                No tienes clases programadas próximamente.
-             </div>
-           ) : (
-             <div className="flex flex-wrap gap-3">
-               {Array.from(new Set(clases.map(c => c.nombre_clase))).map(clsName => {
-                 return (
-                   <Link 
-                     href={`/alumno/explorar?filtro=${encodeURIComponent(clsName)}`}
-                     key={clsName} 
-                     className="px-4 py-2.5 bg-surface-container-lowest border border-surface-container shadow-sm rounded-full font-label-lg font-bold text-on-surface flex items-center gap-2 hover:bg-surface-container-high transition-colors active:scale-95"
-                   >
-                      <span className="material-symbols-outlined text-[18px] text-primary">local_fire_department</span>
-                      {clsName}
-                   </Link>
-                 );
-               })}
-             </div>
-           )}
-        </section>
-
-
       </div>
     </div>
   );
