@@ -17,12 +17,19 @@ interface Profile {
 }
 
 export default function AdminGestionPage() {
-  const [activeTab, setActiveTab] = useState<"staff" | "calendar" | "types" | "salas">("staff");
+  const [activeTab, setActiveTab] = useState<"staff" | "calendar" | "types" | "salas">("calendar");
   
-  // SCHEDULE STATE
-  const [selectedDay, setSelectedDay] = useState("Hoy");
-  const daysFilter = ["Hoy", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Semana"];
+  // SCHEDULE STATE (Plantillas/Horarios Fijos)
+  const [selectedDay, setSelectedDay] = useState("Lun");
+  const daysFilter = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
   const [scheduleData, setScheduleData] = useState<any[]>([]);
+  
+  const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+  const [tName, setTName] = useState("");
+  const [tProf, setTProf] = useState("");
+  const [tRoom, setTRoom] = useState("");
+  const [tStartTime, setTStartTime] = useState("18:00");
+  const [tEndTime, setTEndTime] = useState("19:15");
 
   // STAFF STATE
   const [profesores, setProfesores] = useState<Profile[]>([]);
@@ -52,13 +59,17 @@ export default function AdminGestionPage() {
   };
 
   useEffect(() => {
-    if (activeTab === "calendar") fetchClases();
+    if (activeTab === "calendar") fetchPlantillas();
     if (activeTab === "staff") {
       fetchProfesores();
       fetchCandidatos();
     }
-    if (activeTab === "types" || activeTab === "salas" || activeTab === "staff") {
+    if (activeTab === "types" || activeTab === "salas" || activeTab === "staff" || activeTab === "calendar") {
       fetchTiposYSalas();
+    }
+    // Para el modal de añadir plantilla, cargamos a los profes
+    if (activeTab === "calendar" && profesores.length === 0) {
+      fetchProfesores();
     }
   }, [activeTab, selectedDay]);
 
@@ -67,8 +78,7 @@ export default function AdminGestionPage() {
     const { data: tipos } = await supabase.from('tipos_clase').select('*').order('created_at', { ascending: true });
     if (tipos) setClassTypes(tipos);
     
-    // Salas might not exist yet, catch error gracefully
-    const { data: salasData, error } = await supabase.from('salas').select('*').order('created_at', { ascending: true });
+    const { data: salasData } = await supabase.from('salas').select('*').order('created_at', { ascending: true });
     if (salasData) setSalas(salasData);
   }
 
@@ -152,14 +162,10 @@ export default function AdminGestionPage() {
     e.preventDefault();
     if (!supabase || !newRoomName.trim()) return;
     setIsAdding(true);
-    const { error } = await supabase.from('salas').insert([{ nombre: newRoomName.trim() }]);
+    await supabase.from('salas').insert([{ nombre: newRoomName.trim() }]);
     setIsAdding(false);
-    if (error) {
-      alert("Error al crear sala. ¿Creaste la tabla en Supabase?");
-    } else {
-      setNewRoomName("");
-      fetchTiposYSalas();
-    }
+    setNewRoomName("");
+    fetchTiposYSalas();
   };
 
   const handleDeleteRoom = async (id: string) => {
@@ -168,48 +174,77 @@ export default function AdminGestionPage() {
     fetchTiposYSalas();
   };
 
-  // --- CALENDAR FUNCTIONS ---
-  async function fetchClases() {
+  // --- CALENDAR (PLANTILLAS) FUNCTIONS ---
+  async function fetchPlantillas() {
     if (!supabase) return;
     const { data } = await supabase
-      .from('clase')
-      .select(`id_clase, nombre_clase, fecha_hora_inicio, sala, profiles:id_profesor (name)`)
-      .eq('estado_clase', 'programada')
-      .order('fecha_hora_inicio', { ascending: true });
+      .from('plantillas_clase')
+      .select(`id_plantilla, dia_semana, hora_inicio, hora_fin, nombre_clase, sala, profiles:id_profesor (name)`)
+      .order('hora_inicio', { ascending: true });
 
     if (data) {
-      let filteredData = data;
-      const now = new Date();
-      if (selectedDay !== "Semana") {
-        const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-        let targetDay = now.getDay();
-        if (selectedDay !== "Hoy") {
-          const index = daysOfWeek.indexOf(selectedDay);
-          if (index !== -1) targetDay = index;
-        }
-        filteredData = data.filter((c: any) => new Date(c.fecha_hora_inicio).getDay() === targetDay);
-      }
+      const daysOfWeekMap = { "Dom": 0, "Lun": 1, "Mar": 2, "Mié": 3, "Jue": 4, "Vie": 5, "Sáb": 6 };
+      const targetDay = daysOfWeekMap[selectedDay as keyof typeof daysOfWeekMap];
+      
+      const filteredData = data.filter((c: any) => c.dia_semana === targetDay);
 
       const grouped: Record<string, any> = {};
-      const defaultBlocks = ['09:00', '10:00', '11:00', '12:00', '13:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-      defaultBlocks.forEach(time => { grouped[time] = { time, items: [] }; });
       
       filteredData.forEach((c: any) => {
-         const date = new Date(c.fecha_hora_inicio);
-         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-         if (!grouped[timeStr]) grouped[timeStr] = { time: timeStr, items: [] };
+         const timeParts = c.hora_inicio.split(':');
+         let hour = parseInt(timeParts[0]);
+         const ampm = hour >= 12 ? 'p. m.' : 'a. m.';
+         hour = hour % 12;
+         hour = hour ? hour : 12; 
+         const timeStr = `${hour.toString().padStart(2, '0')}:${timeParts[1]} ${ampm}`;
+
+         const sortKey = `${timeParts[0]}:${timeParts[1]}`;
+
+         if (!grouped[sortKey]) grouped[sortKey] = { time: timeStr, sortKey, items: [] };
          
          let profName = Array.isArray(c.profiles) ? c.profiles[0]?.name : (c.profiles?.name || "Profesor");
-         grouped[timeStr].items.push({ id: c.id_clase, name: c.nombre_clase, prof: profName, sala: c.sala || "Sala Principal" });
+         grouped[sortKey].items.push({ id: c.id_plantilla, name: c.nombre_clase, prof: profName, sala: c.sala || "Sala Principal" });
       });
-      setScheduleData(Object.values(grouped).sort((a: any, b: any) => a.time.localeCompare(b.time)));
+      setScheduleData(Object.values(grouped).sort((a: any, b: any) => a.sortKey.localeCompare(b.sortKey)));
+    } else {
+      setScheduleData([]);
     }
   }
 
-  const filteredCandidatos = candidatos.filter(c => 
-    (c.name && c.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (c.correo && c.correo.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const handleAddTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    
+    const daysOfWeekMap = { "Dom": 0, "Lun": 1, "Mar": 2, "Mié": 3, "Jue": 4, "Vie": 5, "Sáb": 6 };
+    const targetDay = daysOfWeekMap[selectedDay as keyof typeof daysOfWeekMap];
+
+    const { error } = await supabase.from('plantillas_clase').insert([{
+      dia_semana: targetDay,
+      hora_inicio: tStartTime + ":00",
+      hora_fin: tEndTime + ":00",
+      nombre_clase: tName,
+      id_profesor: tProf || null,
+      sala: tRoom,
+      cupo_maximo: 8
+    }]);
+
+    if (error) {
+      alert("Error al guardar plantilla. ¿Ejecutaste el script horarios_fijos.sql en Supabase?");
+    } else {
+      showToast("Bloque de horario añadido.");
+      setIsAddingTemplate(false);
+      setTName("");
+      fetchPlantillas();
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string, e: any) => {
+    e.stopPropagation();
+    if (!supabase) return;
+    if (!window.confirm("¿Eliminar este bloque fijo de la semana?")) return;
+    await supabase.from('plantillas_clase').delete().eq('id_plantilla', id);
+    fetchPlantillas();
+  };
 
   return (
     <div className="flex flex-col w-full pb-24 bg-surface min-h-screen">
@@ -223,6 +258,15 @@ export default function AdminGestionPage() {
               className="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm active:scale-95 transition-transform"
             >
               <span className="material-symbols-outlined text-[20px]">person_add</span>
+            </button>
+          )}
+          {activeTab === "calendar" && (
+            <button 
+              onClick={() => setIsAddingTemplate(true)}
+              className="px-3 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              Bloque
             </button>
           )}
         </div>
@@ -273,20 +317,24 @@ export default function AdminGestionPage() {
         </section>
       )}
 
-      {/* CALENDAR TAB */}
+      {/* CALENDAR (PLANTILLAS) TAB */}
       {activeTab === "calendar" && (
         <section className="px-gutter-mobile mt-space-md animate-in fade-in">
           <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-4 pb-2 -mx-gutter-mobile px-gutter-mobile">
             {daysFilter.map(day => (
-              <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "bg-primary text-on-primary shadow-md" : "bg-surface-container-low text-on-surface-variant"}`}>
+              <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "bg-[#D4AF37] text-white shadow-md" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}>
                 {day}
               </button>
             ))}
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 pb-6">
             {scheduleData.length === 0 ? (
-               <p className="text-center text-on-surface-variant my-10">No hay clases programadas.</p>
+               <div className="text-center bg-surface-container-lowest rounded-2xl border border-surface-container py-10 mt-2">
+                 <span className="material-symbols-outlined text-[40px] text-surface-variant mb-2">calendar_today</span>
+                 <p className="text-on-surface font-bold">Sin bloques fijos</p>
+                 <p className="text-secondary text-sm mt-1">Añade plantillas para el {selectedDay}.</p>
+               </div>
             ) : (
               scheduleData.map((slot, idx) => (
                 <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-surface-container overflow-hidden">
@@ -294,17 +342,16 @@ export default function AdminGestionPage() {
                     {slot.time}
                   </div>
                   <div className="p-3 grid grid-cols-2 gap-3">
-                    {slot.items.length === 0 ? (
-                      <div className="col-span-2 text-center py-2 text-on-surface-variant font-label-sm border border-dashed rounded-xl border-surface-variant">Libre</div>
-                    ) : (
-                      slot.items.map((c: any, i: number) => (
-                        <div key={i} className="p-3 rounded-xl border border-surface-container-high bg-surface-container flex flex-col justify-center text-center">
-                          <span className="font-label-caps text-secondary mb-1">{c.sala}</span>
-                          <span className="font-label-md text-on-surface font-bold">{c.name}</span>
-                          <span className="text-[10px] text-on-surface-variant">{c.prof}</span>
-                        </div>
-                      ))
-                    )}
+                    {slot.items.map((c: any, i: number) => (
+                      <div key={i} className="relative p-3 rounded-xl border border-surface-container-high bg-surface-container flex flex-col justify-center text-center group">
+                        <span className="font-label-caps text-secondary mb-1">{c.sala}</span>
+                        <span className="font-label-md text-on-surface font-bold">{c.name}</span>
+                        <span className="text-[10px] text-on-surface-variant">{c.prof}</span>
+                        <button onClick={(e) => handleDeleteTemplate(c.id, e)} className="absolute -top-2 -right-2 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 shadow-sm transition-opacity">
+                          <span className="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))
@@ -357,6 +404,71 @@ export default function AdminGestionPage() {
             )}
           </div>
         </section>
+      )}
+
+      {/* MODAL: ADD TEMPLATE */}
+      {isAddingTemplate && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
+          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-md font-bold text-on-surface">Nuevo Bloque ({selectedDay})</h3>
+              <button onClick={() => setIsAddingTemplate(false)} className="w-8 h-8 flex items-center justify-center bg-surface-container rounded-full">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleAddTemplate} className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-bold text-secondary mb-1 block">Disciplina / Nivel</label>
+                <select required value={tName} onChange={e => setTName(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none appearance-none">
+                  <option value="">Selecciona disciplina...</option>
+                  <option value="Experto">Experto</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Básico">Básico</option>
+                  <option value="Pole Sport">Pole Sport</option>
+                  <option value="Flex">Flex</option>
+                  {classTypes.map(t => (
+                    <option key={t.id} value={t.nombre}>{t.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-secondary mb-1 block">Profesor a Cargo</label>
+                <select required value={tProf} onChange={e => setTProf(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none appearance-none">
+                  <option value="">Selecciona profesor...</option>
+                  {profesores.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} {p.last_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-secondary mb-1 block">Sala</label>
+                <select required value={tRoom} onChange={e => setTRoom(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none appearance-none">
+                  <option value="">Selecciona sala...</option>
+                  {salas.map(s => (
+                    <option key={s.id} value={s.nombre}>{s.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-secondary mb-1 block">Inicio</label>
+                  <input required type="time" value={tStartTime} onChange={e => setTStartTime(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-secondary mb-1 block">Fin (1h 15m)</label>
+                  <input required type="time" value={tEndTime} onChange={e => setTEndTime(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none" />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-4 shadow-md">
+                Crear Bloque Fijo
+              </button>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* MODAL: EDIT PROFESSOR */}
