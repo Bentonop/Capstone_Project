@@ -88,45 +88,45 @@ export default function ProfesorMetricasPage() {
   }, []);
 
   return (
-    <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
-      <header className="pt-safe pb-4 px-margin-mobile flex flex-col justify-end sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-surface-container shadow-sm min-h-[90px]">
-        <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Métricas y Desempeño</h1>
+    <div className="flex flex-col w-full pb-20 min-h-screen bg-surface">
+      <header className="pt-safe pb-2 px-margin-mobile flex flex-col justify-end sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-surface-container shadow-sm min-h-[70px]">
+        <h1 className="font-headline-sm text-headline-sm text-on-surface font-bold">Métricas y Desempeño</h1>
       </header>
 
-      <div className="px-margin-mobile pt-space-md flex flex-col gap-6 animate-in fade-in">
+      <div className="flex flex-col animate-in fade-in">
         
-        {/* Mini Dashboard Superior */}
-        <section className="grid grid-cols-2 gap-3">
-          <div className="bg-primary/10 border border-primary/20 p-4 rounded-2xl flex flex-col gap-1 items-center justify-center text-center shadow-sm">
-             <span className="material-symbols-outlined text-primary text-[28px]">monitoring</span>
-             <span className="font-display-md font-bold text-primary">{avgOccupancy}%</span>
-             <span className="font-label-sm uppercase tracking-wider text-primary/80">Ocupación Media</span>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-             <div className="bg-surface-container-low border border-surface-container shadow-sm p-3 rounded-2xl flex flex-col items-center justify-center flex-1">
-                <span className="font-headline-sm font-bold text-on-surface">{totalClasses}</span>
-                <span className="font-label-xs uppercase tracking-wider text-secondary">Clases Dadas</span>
-             </div>
-             <div className="bg-surface-container-low border border-surface-container shadow-sm p-3 rounded-2xl flex flex-col items-center justify-center flex-1">
-                <span className="font-headline-sm font-bold text-on-surface">{totalStudents}</span>
-                <span className="font-label-xs uppercase tracking-wider text-secondary">Alumnos Atendidos</span>
-             </div>
+        {/* Dashboard Superior Compacto */}
+        <section className="px-margin-mobile pt-4 pb-2">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+               <span className="font-headline-md font-bold text-primary">{avgOccupancy}%</span>
+               <span className="font-label-xs uppercase tracking-wider text-primary/80 mt-1">Ocupación</span>
+            </div>
+            <div className="bg-surface-container-low border border-surface-container p-3 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+               <span className="font-headline-md font-bold text-on-surface">{totalClasses}</span>
+               <span className="font-label-xs uppercase tracking-wider text-secondary mt-1">Clases</span>
+            </div>
+            <div className="bg-surface-container-low border border-surface-container p-3 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm">
+               <span className="font-headline-md font-bold text-on-surface">{totalStudents}</span>
+               <span className="font-label-xs uppercase tracking-wider text-secondary mt-1">Alumnos</span>
+            </div>
           </div>
         </section>
 
         {/* Historial de Clases */}
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-surface-container pb-2">
-            <h2 className="font-headline-sm text-on-surface font-bold">Historial de Clases</h2>
-            <span className="font-label-sm text-secondary bg-surface-container px-2 py-1 rounded-md">{pastClasses.length} completadas</span>
+        <section className="flex flex-col mt-2">
+          <div className="px-margin-mobile flex items-center justify-between pb-2">
+            <h2 className="font-label-lg text-on-surface font-bold">Historial de Clases</h2>
+            <span className="font-label-xs text-secondary bg-surface-container px-2 py-0.5 rounded-md">{pastClasses.length} completadas</span>
           </div>
           
-          <div className="bg-surface-container-low border border-surface-container rounded-xl p-3 flex items-start gap-3 shadow-sm">
-             <span className="material-symbols-outlined text-secondary mt-0.5">info</span>
-             <p className="font-body-sm text-secondary leading-relaxed">
-               Si un alumno llegó tarde y no alcanzaste a escanear su código, selecciona la clase en este historial para <strong className="text-on-surface">modificar el pase de lista</strong>.
-             </p>
+          <div className="px-margin-mobile mb-3">
+            <div className="bg-surface-container-lowest border border-surface-container rounded-lg p-2.5 flex items-start gap-2">
+               <span className="material-symbols-outlined text-[16px] text-secondary mt-0.5">info</span>
+               <p className="font-body-xs text-secondary leading-tight">
+                 Toca una clase pasada para <strong className="text-on-surface">modificar su asistencia</strong> retroactivamente.
+               </p>
+            </div>
           </div>
 
           {isLoading ? (
@@ -134,35 +134,32 @@ export default function ProfesorMetricasPage() {
               <span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span>
             </div>
           ) : pastClasses.length === 0 ? (
-            <div className="p-8 bg-surface-container-lowest border border-surface-container rounded-2xl flex flex-col items-center text-center shadow-sm">
-              <span className="material-symbols-outlined text-[48px] text-secondary mb-3">history</span>
-              <h3 className="font-headline-sm text-on-surface">No hay historial</h3>
-              <p className="font-body-sm text-on-surface-variant mt-1">Aún no has impartido ninguna clase que haya finalizado.</p>
+            <div className="mx-margin-mobile p-6 bg-surface-container-lowest border border-surface-container rounded-2xl flex flex-col items-center text-center shadow-sm">
+              <span className="material-symbols-outlined text-[40px] text-secondary mb-2">history</span>
+              <h3 className="font-label-lg font-bold text-on-surface">No hay historial</h3>
+              <p className="font-body-xs text-on-surface-variant mt-1">Aún no has impartido ninguna clase.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {pastClasses.map(cls => (
+            <div className="flex flex-col border-t border-surface-container bg-surface-container-lowest">
+              {pastClasses.map((cls, index) => (
                 <Link key={cls.id} href={`/profesor/clase/${cls.id}`}>
-                  <article className="p-4 bg-surface-container-lowest border border-surface-container rounded-2xl flex flex-col gap-2 shadow-sm hover:border-primary/40 transition-colors active:scale-95">
-                    <div className="flex justify-between items-start">
-                      <div className="flex flex-col">
-                        <span className="font-label-sm text-primary uppercase font-bold capitalize">{cls.dateStr}</span>
-                        <h3 className="font-headline-sm text-on-surface mt-0.5">{cls.name}</h3>
-                      </div>
-                      <div className="bg-surface-container px-2 py-1 rounded-md flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px] text-secondary">group</span>
-                        <span className="font-label-sm font-bold text-on-surface">{cls.enrolled}/{cls.maxCapacity}</span>
+                  <article className={`px-margin-mobile py-3 flex items-center justify-between hover:bg-surface-container-low active:bg-surface-container transition-colors ${index !== pastClasses.length - 1 ? 'border-b border-surface-container-highest' : ''}`}>
+                    <div className="flex flex-col">
+                      <span className="font-label-xs text-primary uppercase font-bold tracking-wide">{cls.dateStr}</span>
+                      <h3 className="font-label-lg text-on-surface font-bold leading-tight mt-0.5">{cls.name}</h3>
+                      <div className="flex items-center gap-1.5 font-body-xs text-secondary mt-1">
+                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">schedule</span>{cls.timeRange}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">meeting_room</span>{cls.room}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 text-secondary font-body-sm mt-1">
-                      <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">schedule</span>
-                        {cls.timeRange}
+                    
+                    <div className="flex flex-col items-end justify-center gap-1.5 pl-2">
+                      <div className={`px-2 py-0.5 rounded-md flex items-center gap-1 ${cls.enrolled >= cls.maxCapacity ? 'bg-error-container text-error' : 'bg-surface-container text-on-surface'}`}>
+                        <span className="material-symbols-outlined text-[12px]">group</span>
+                        <span className="font-label-sm font-bold">{cls.enrolled}/{cls.maxCapacity}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[16px]">meeting_room</span>
-                        {cls.room}
-                      </div>
+                      <span className="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
                     </div>
                   </article>
                 </Link>
