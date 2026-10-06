@@ -33,6 +33,23 @@ Dado que somos nuevos usando Git Flow, debemos usar **Nombres Semánticos** para
 
 **Regla de oro antes de escribir:** *¿Estoy agregando algo nuevo (feat), arreglando algo roto (fix) o solo limpiando/organizando (chore)?*
 
+## 🎯 Gestión de Tareas (Issues)
+
+En GitHub, usamos la pestaña **Issues** como nuestra lista de tareas y reporte de errores oficial. Es como un muro de *Post-its* digital donde organizamos el trabajo del equipo.
+
+### ¿Cómo usar los Issues?
+1. **Reportar Errores:** Si encuentras un bug (error), crea un Issue explicando el problema (ej. *"Botón de pago no redirige a Transbank"*).
+2. **Planear Funciones:** Antes de programar algo nuevo, crea un Issue para discutirlo (ej. *"Diseñar e integrar panel de toma de asistencia"*).
+3. **Asignar Responsables:** En cada Issue puedes asignar a la persona (o personas) que se encargarán de resolverlo. Así todos saben quién hace qué.
+
+### Conexión Mágica con Git Flow (Cerrar Issues automáticamente)
+Cada vez que creas un Issue, GitHub le asigna un número identificador (ej. el Issue **#5**). Para conectar tu trabajo con esa tarea, sigue este truco profesional:
+
+1. Nombra tu rama de trabajo agregando el número del Issue al final:
+   `git checkout -b feat/toma-asistencia-5`
+2. Cuando hagas el Pull Request en GitHub para fusionar tu código, escribe en la caja de descripción la palabra mágica **"Closes #5"** (con el número que corresponda).
+3. ¡Listo! En cuanto tus compañeros aprueben el Pull Request (Merge), GitHub automáticamente tachará el Issue de la lista y lo marcará como "Terminado".
+
 ## Cómo Funciona (Ciclo de Ejecución)
 
 Para cada nueva tarea asignada en el proyecto, se debe seguir este flujo exacto:
