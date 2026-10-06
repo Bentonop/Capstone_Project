@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FFFFFF;
+  --foreground: #111111;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-mono: var(--font-geist-mono);
+
+  --color-primary: #D4AF37;
+  --color-on-primary: #111111;
+  --color-primary-fixed: #F9E596;
+  --color-on-primary-fixed: #3B3100;
+  --color-on-primary-fixed-variant: #A08C45;
+  
+  --color-secondary: #111214;
+  --color-on-secondary: #FFFFFF;
+  --color-secondary-container: #1F2125;
+  --color-on-secondary-fixed: #FFFFFF;
+  
+  --color-surface: #FFFFFF;
+  --color-on-surface: #111214;
+  --color-surface-variant: #F4F5F7;
+  --color-on-surface-variant: #6B7280;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #FAFAFA;
+  --color-surface-container: #F3F4F6;
+  --color-surface-container-high: #E5E7EB;
+  --color-surface-container-highest: #D1D5DB;
+
+  --spacing-space-2xs: 0.25rem;
+  --spacing-space-xs: 0.5rem;
+  --spacing-space-sm: 0.75rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.25rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-space-2xl: 2rem;
+  --spacing-space-3xl: 2.5rem;
+  --spacing-space-4xl: 3rem;
+  --spacing-margin-mobile: 1.25rem;
+  --spacing-gutter-mobile: 1rem;
+  --spacing-bottom-nav-height: 4.5rem;
+  --spacing-bottom-nav-safe: 6rem;
+
+  --text-display: 40px;
+  --text-display--line-height: 48px;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 800;
+
+  --text-display-mobile: 32px;
+  --text-display-mobile--line-height: 38px;
+  --text-display-mobile--letter-spacing: -0.025em;
+  --text-display-mobile--font-weight: 800;
+
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 34px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 700;
+
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-headline-sm--font-weight: 600;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--letter-spacing: 0.01em;
+  --text-body-sm--font-weight: 400;
+
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 18px;
+  --text-label-lg--letter-spacing: 0.01em;
+  --text-label-lg--font-weight: 600;
+
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.02em;
+  --text-label-md--font-weight: 600;
+
+  --text-label-caps: 10px;
+  --text-label-caps--line-height: 14px;
+  --text-label-caps--letter-spacing: 0.06em;
+  --text-label-caps--font-weight: 700;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html, body {
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    @apply bg-surface text-on-surface font-sans;
+  }
+  body {
+    overscroll-behavior: none;
+    min-height: max(884px, 100dvh);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  main > :first-child {
+    margin-top: 0 !important;
+  }
+  main > :last-child {
+    margin-bottom: 0 !important;
+  }
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .card-dark {
+    @apply bg-secondary text-on-secondary shadow-xl rounded-[28px];
+  }
+  .card-light {
+    @apply bg-surface text-on-surface shadow-xl shadow-black/5 rounded-[28px] border border-surface-container-high;
+  }
 }
