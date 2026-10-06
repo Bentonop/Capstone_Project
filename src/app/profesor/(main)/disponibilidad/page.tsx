@@ -67,6 +67,12 @@ export default function DisponibilidadPage() {
       // Añadir 75 minutos
       const endDateTime = new Date(startDateTime.getTime() + 75 * 60000);
 
+      // Convertir a string local exacto para que Supabase no le sume 3 horas
+      const formatLocal = (d: Date) => {
+        const pad = (n: number) => (n < 10 ? '0' + n : n);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+      };
+
       // Obtener el ID del profesor (simulado buscando el primer profesor en la BD)
       const { data: profData, error: profError } = await supabase
         .from('profiles')
@@ -85,8 +91,8 @@ export default function DisponibilidadPage() {
         nombre_clase: formData.nombre_clase,
         cupo_maximo: 8,
         cupos_inscritos: 0,
-        fecha_hora_inicio: startDateTime.toISOString(),
-        fecha_hora_fin: endDateTime.toISOString(),
+        fecha_hora_inicio: formatLocal(startDateTime),
+        fecha_hora_fin: formatLocal(endDateTime),
         estado_clase: 'programada',
         sala: formData.sala,
         descripcion: formData.descripcion
