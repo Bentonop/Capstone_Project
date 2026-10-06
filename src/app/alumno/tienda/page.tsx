@@ -158,7 +158,7 @@ export default function TiendaPage() {
                     <span className={`font-label-lg font-bold ${isDestacado ? 'text-primary' : 'text-on-surface-variant'}`}>
                       {plan.duracion_dias} días
                     </span>
-                    <span className="font-headline-sm font-bold text-on-surface">
+                    <span className="font-headline-sm font-bold gradient-text">
                       $ {plan.precio.toLocaleString()}
                     </span>
                   </div>
@@ -216,7 +216,7 @@ export default function TiendaPage() {
             <div className="p-5 pb-24 flex flex-col gap-5">
               <div className="bg-surface-container-low p-4 rounded-xl flex justify-between items-center">
                 <span className="font-body-md text-on-surface-variant">Total a pagar:</span>
-                <span className="font-headline-sm font-bold text-on-surface">${selectedPlan.precio.toLocaleString()}</span>
+                <span className="font-headline-sm font-bold gradient-text">${selectedPlan.precio.toLocaleString()}</span>
               </div>
 
               <div className="flex flex-col gap-3">

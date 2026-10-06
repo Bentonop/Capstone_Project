@@ -208,13 +208,13 @@ export default function AdminAlumnosPage() {
 
   return (
     <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
-      <header className="pt-safe pb-4 px-margin-mobile flex flex-col justify-end sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-surface-container shadow-sm min-h-[90px]">
+      <header className="pt-safe pb-4 px-margin-mobile flex flex-col justify-end sticky top-0 z-10 glass-panel border-x-0 border-t-0 rounded-none border-b border-surface-container shadow-sm min-h-[90px]">
         <div className="flex items-center justify-between">
-          <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Gestión de Alumnos</h1>
+          <h1 className="font-headline-md text-headline-md gradient-text font-bold">Gestión de Alumnos</h1>
           {activeTab === "alumnos" && (
             <button 
               onClick={() => setIsInviteModalOpen(true)}
-              className="px-4 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+              className="px-4 h-10 rounded-full premium-btn flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
             >
               <span className="material-symbols-outlined text-[20px]">mail</span>
               Invitar
@@ -246,7 +246,7 @@ export default function AdminAlumnosPage() {
         {/* ALUMNOS TAB */}
         {activeTab === "alumnos" && (
           <div className="animate-in fade-in">
-            <div className="flex bg-surface-container-low rounded-xl px-4 h-12 items-center gap-2 mb-6 border border-surface-container-highest focus-within:border-primary transition-colors">
+            <div className="flex glass-panel rounded-xl px-4 h-12 items-center gap-2 mb-6 border border-surface-container-highest focus-within:border-primary transition-colors">
               <span className="material-symbols-outlined text-on-surface-variant">search</span>
               <input 
                 type="text" 
@@ -261,7 +261,7 @@ export default function AdminAlumnosPage() {
                 <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Invitaciones Pendientes</h3>
                 <div className="flex flex-col gap-3">
                   {invitaciones.map((inv) => (
-                    <article key={inv.correo} className="flex items-center justify-between p-4 bg-surface-container-low border border-dashed border-surface-container-highest rounded-2xl">
+                    <article key={inv.correo} className="flex items-center justify-between p-4 premium-card border-dashed rounded-2xl">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
                           <span className="material-symbols-outlined">mail</span>
@@ -344,7 +344,7 @@ export default function AdminAlumnosPage() {
                     </div>
 
                     <div className="flex gap-2 mt-2">
-                      <button className="flex-1 h-10 rounded-lg bg-surface-container border border-surface-container-highest font-label-sm font-bold text-on-surface flex items-center justify-center gap-1">
+                      <button className="flex-1 h-10 rounded-lg glass-panel border border-surface-container-highest font-label-sm font-bold text-on-surface flex items-center justify-center gap-1">
                         <span className="material-symbols-outlined text-[18px]">history</span>
                         Historial
                       </button>
@@ -450,7 +450,7 @@ export default function AdminAlumnosPage() {
                  </div>
                  <span className="material-symbols-outlined text-[64px] text-primary/40 mb-3 drop-shadow-sm">receipt_long</span>
                  <span className="font-label-lg text-secondary mb-1 uppercase tracking-widest">Cuerpo y Alma</span>
-                 <span className="font-headline-sm font-bold text-on-surface mb-3 text-center">Transferencia<br/>Recibida</span>
+                 <span className="font-headline-sm font-bold gradient-text mb-3 text-center">Transferencia<br/>Recibida</span>
                  <div className="w-3/4 h-px bg-surface-container-highest my-3 border-b border-dashed border-secondary/30"></div>
                  <span className="font-body-sm text-secondary font-mono bg-surface-container-high px-3 py-1.5 rounded-md text-center max-w-[80%] break-all shadow-inner">
                    {selectedImage}
@@ -474,9 +474,9 @@ export default function AdminAlumnosPage() {
       {/* EDIT MEDICAL MODAL */}
       {editingAlumno && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end animate-in fade-in" onClick={() => setEditingAlumno(null)}>
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom" onClick={e => e.stopPropagation()}>
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-2 border-b border-surface-container pb-3">
-              <h3 className="font-headline-sm font-bold text-on-surface flex items-center gap-2">
+              <h3 className="font-headline-sm font-bold gradient-text flex items-center gap-2">
                 <span className="material-symbols-outlined text-error">medical_services</span>
                 Ficha Médica
               </h3>
@@ -497,7 +497,7 @@ export default function AdminAlumnosPage() {
                   placeholder="Ej. Mamá: +569 1234 5678" 
                   value={editEmergencia} 
                   onChange={e => setEditEmergencia(e.target.value)} 
-                  className="h-12 bg-surface-container border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" 
+                  className="h-12 glass-panel border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" 
                 />
               </div>
 
@@ -507,7 +507,7 @@ export default function AdminAlumnosPage() {
                   placeholder="Ej. Asma leve, lesión de rodilla..." 
                   value={editFicha} 
                   onChange={e => setEditFicha(e.target.value)} 
-                  className="h-24 bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-secondary resize-none font-body-sm" 
+                  className="h-24 glass-panel border border-surface-container-highest rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-secondary resize-none font-body-sm" 
                 />
               </div>
 
@@ -522,9 +522,9 @@ export default function AdminAlumnosPage() {
       {/* MODAL: INVITAR ALUMNO */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-headline-sm font-bold text-on-surface">Invitar Alumno</h3>
+              <h3 className="font-headline-sm font-bold gradient-text">Invitar Alumno</h3>
               <button onClick={() => setIsInviteModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
             </div>
             <p className="text-body-sm text-on-surface-variant mb-2">Ingresa el correo del alumno. Solo podrá registrarse y acceder a la academia si su correo está en esta lista de invitados.</p>
@@ -537,7 +537,7 @@ export default function AdminAlumnosPage() {
                 onChange={e => setInviteEmail(e.target.value)} 
                 className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none focus:border-primary border border-transparent" 
               />
-              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-2 shadow-md">
+              <button type="submit" className="w-full h-12 premium-btn font-bold rounded-xl mt-2 shadow-md">
                 Enviar Invitación
               </button>
             </form>
