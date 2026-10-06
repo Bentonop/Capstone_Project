@@ -26,9 +26,9 @@ export default function AdminGestionPage() {
 
   // STAFF STATE
   const [profesores, setProfesores] = useState<Profile[]>([]);
-  const [candidatos, setCandidatos] = useState<Profile[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [invitaciones, setInvitaciones] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // CONFIG STATE (Types & Salas)
   const [classTypes, setClassTypes] = useState<any[]>([]);
@@ -55,7 +55,7 @@ export default function AdminGestionPage() {
     if (activeTab === "calendar") fetchClases();
     if (activeTab === "staff") {
       fetchProfesores();
-      fetchCandidatos();
+      fetchInvitaciones();
     }
     if (activeTab === "types" || activeTab === "salas" || activeTab === "staff") {
       fetchTiposYSalas();
@@ -79,21 +79,31 @@ export default function AdminGestionPage() {
     if (data) setProfesores(data);
   }
 
-  async function fetchCandidatos() {
+  async function fetchInvitaciones() {
     if (!supabase) return;
-    const { data } = await supabase.from("profiles").select("*").neq("role", "profesor").order("created_at", { ascending: false }).limit(50);
-    if (data) setCandidatos(data);
+    const { data } = await supabase.from("roles_whitelist").select("*").eq("rol_asignado", "profesor");
+    if (data) setInvitaciones(data);
   }
 
-  const handlePromote = async (id: string) => {
-    if (!supabase) return;
-    if (!window.confirm("¿Seguro que deseas ascender a este usuario a Profesor?")) return;
-    const { error } = await supabase.from("profiles").update({ role: "profesor" }).eq("id", id);
-    if (!error) {
-      showToast("Ascendido a Profesor.");
-      setIsSearchModalOpen(false);
-      fetchProfesores();
+  const handleInvitar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !inviteEmail.trim()) return;
+    const { error } = await supabase.from("roles_whitelist").insert([{ correo: inviteEmail.trim().toLowerCase(), rol_asignado: "profesor" }]);
+    if (error) {
+      alert("Error al invitar. Quizás el correo ya está invitado.");
+    } else {
+      showToast("Invitación enviada exitosamente.");
+      setInviteEmail("");
+      setIsInviteModalOpen(false);
+      fetchInvitaciones();
     }
+  };
+
+  const handleCancelarInvitacion = async (correo: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Cancelar la invitación a ${correo}?`)) return;
+    await supabase.from("roles_whitelist").delete().eq("correo", correo);
+    fetchInvitaciones();
   };
 
   const handleDemote = async () => {
@@ -206,10 +216,7 @@ export default function AdminGestionPage() {
     }
   }
 
-  const filteredCandidatos = candidatos.filter(c => 
-    (c.name && c.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (c.correo && c.correo.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+
 
   return (
     <div className="flex flex-col w-full pb-24 bg-surface min-h-screen">
@@ -219,10 +226,11 @@ export default function AdminGestionPage() {
           <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Gestión Academia</h1>
           {activeTab === "staff" && (
             <button 
-              onClick={() => setIsSearchModalOpen(true)}
-              className="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+              onClick={() => setIsInviteModalOpen(true)}
+              className="px-4 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
             >
-              <span className="material-symbols-outlined text-[20px]">person_add</span>
+              <span className="material-symbols-outlined text-[20px]">mail</span>
+              Invitar
             </button>
           )}
         </div>
@@ -247,6 +255,32 @@ export default function AdminGestionPage() {
       {/* STAFF TAB */}
       {activeTab === "staff" && (
         <section className="px-gutter-mobile mt-space-md animate-in fade-in flex flex-col gap-3">
+          {/* INVITACIONES PENDIENTES */}
+          {invitaciones.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Invitaciones Pendientes</h3>
+              <div className="flex flex-col gap-3">
+                {invitaciones.map((inv) => (
+                  <article key={inv.correo} className="flex items-center justify-between p-4 bg-surface-container-low border border-dashed border-surface-container-highest rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
+                        <span className="material-symbols-outlined">mail</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-body-md text-on-surface font-semibold">{inv.correo}</span>
+                        <span className="font-body-sm text-secondary">Pendiente de registro</span>
+                      </div>
+                    </div>
+                    <button onClick={() => handleCancelarInvitacion(inv.correo)} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                      <span className="material-symbols-outlined">cancel</span>
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Profesores Activos</h3>
           {profesores.length === 0 ? (
             <p className="text-center text-on-surface-variant my-10">No hay profesores en el equipo.</p>
           ) : (
@@ -388,27 +422,28 @@ export default function AdminGestionPage() {
         </div>
       )}
 
-      {/* MODAL: PROMOTE USER */}
-      {isSearchModalOpen && (
+      {/* MODAL: INVITAR PROFESOR */}
+      {isInviteModalOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe h-[80vh] flex flex-col gap-4 animate-in slide-in-from-bottom">
+          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-headline-sm font-bold text-on-surface">Ascender a Profesor</h3>
-              <button onClick={() => setIsSearchModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
+              <h3 className="font-headline-sm font-bold text-on-surface">Invitar Profesor</h3>
+              <button onClick={() => setIsInviteModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
             </div>
-            <input type="text" placeholder="Buscar usuario por nombre/correo..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none" />
-            
-            <div className="flex-1 overflow-y-auto flex flex-col gap-2 mt-2">
-              {filteredCandidatos.map(c => (
-                <div key={c.id} className="p-3 border border-surface-container rounded-xl flex items-center justify-between">
-                  <div className="flex flex-col truncate">
-                    <span className="font-bold text-on-surface text-sm truncate">{c.name} {c.last_name}</span>
-                    <span className="text-xs text-on-surface-variant truncate">{c.correo}</span>
-                  </div>
-                  <button onClick={() => handlePromote(c.id)} className="shrink-0 h-8 px-3 bg-primary text-on-primary font-bold rounded-lg text-xs">Asignar</button>
-                </div>
-              ))}
-            </div>
+            <p className="text-body-sm text-on-surface-variant mb-2">Ingresa el correo del nuevo profesor. Solo los correos invitados podrán registrarse y obtendrán el rol de profesor automáticamente.</p>
+            <form onSubmit={handleInvitar} className="flex flex-col gap-4">
+              <input 
+                required 
+                type="email" 
+                placeholder="correo@ejemplo.com" 
+                value={inviteEmail} 
+                onChange={e => setInviteEmail(e.target.value)} 
+                className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none focus:border-primary border border-transparent" 
+              />
+              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-2 shadow-md">
+                Enviar Invitación
+              </button>
+            </form>
           </div>
         </div>
       )}
