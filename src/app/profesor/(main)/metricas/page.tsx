@@ -140,29 +140,41 @@ export default function ProfesorMetricasPage() {
               <p className="font-body-xs text-on-surface-variant mt-1">Aún no has impartido ninguna clase.</p>
             </div>
           ) : (
-            <div className="flex flex-col border-t border-surface-container bg-surface-container-lowest">
-              {pastClasses.map((cls, index) => (
-                <Link key={cls.id} href={`/profesor/clase/${cls.id}`}>
-                  <article className={`px-margin-mobile py-3 flex items-center justify-between hover:bg-surface-container-low active:bg-surface-container transition-colors ${index !== pastClasses.length - 1 ? 'border-b border-surface-container-highest' : ''}`}>
-                    <div className="flex flex-col">
-                      <span className="font-label-xs text-primary uppercase font-bold tracking-wide">{cls.dateStr}</span>
-                      <h3 className="font-label-lg text-on-surface font-bold leading-tight mt-0.5">{cls.name}</h3>
-                      <div className="flex items-center gap-1.5 font-body-xs text-secondary mt-1">
-                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">schedule</span>{cls.timeRange}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">meeting_room</span>{cls.room}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-end justify-center gap-1.5 pl-2">
-                      <div className={`px-2 py-0.5 rounded-md flex items-center gap-1 ${cls.enrolled >= cls.maxCapacity ? 'bg-error-container text-error' : 'bg-surface-container text-on-surface'}`}>
-                        <span className="material-symbols-outlined text-[12px]">group</span>
-                        <span className="font-label-sm font-bold">{cls.enrolled}/{cls.maxCapacity}</span>
-                      </div>
-                      <span className="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
-                    </div>
-                  </article>
-                </Link>
+            <div className="flex flex-col bg-surface-container-lowest pb-10">
+              {Object.entries(
+                pastClasses.reduce((acc, cls) => {
+                  if (!acc[cls.dateStr]) acc[cls.dateStr] = [];
+                  acc[cls.dateStr].push(cls);
+                  return acc;
+                }, {} as Record<string, PastClass[]>)
+              ).map(([dateStr, classesInDate]) => (
+                <div key={dateStr} className="flex flex-col">
+                  <div className="bg-surface-container-low/95 backdrop-blur-sm px-margin-mobile py-1.5 border-y border-surface-container sticky top-[70px] z-10">
+                    <span className="font-label-xs text-primary uppercase font-bold tracking-wide">{dateStr}</span>
+                  </div>
+                  {classesInDate.map((cls, index) => (
+                    <Link key={cls.id} href={`/profesor/clase/${cls.id}`}>
+                      <article className={`px-margin-mobile py-3 flex items-center justify-between hover:bg-surface-container-low active:bg-surface-container transition-colors ${index !== classesInDate.length - 1 ? 'border-b border-surface-container-highest' : ''}`}>
+                        <div className="flex flex-col">
+                          <h3 className="font-label-lg text-on-surface font-bold leading-tight">{cls.name}</h3>
+                          <div className="flex items-center gap-1.5 font-body-xs text-secondary mt-1">
+                            <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">schedule</span>{cls.timeRange}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-[12px]">meeting_room</span>{cls.room}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-end justify-center gap-1.5 pl-2">
+                          <div className={`px-2 py-0.5 rounded-md flex items-center gap-1 ${cls.enrolled >= cls.maxCapacity ? 'bg-error-container text-error' : 'bg-surface-container text-on-surface'}`}>
+                            <span className="material-symbols-outlined text-[12px]">group</span>
+                            <span className="font-label-sm font-bold">{cls.enrolled}/{cls.maxCapacity}</span>
+                          </div>
+                          <span className="material-symbols-outlined text-[18px] text-secondary">chevron_right</span>
+                        </div>
+                      </article>
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
           )}
