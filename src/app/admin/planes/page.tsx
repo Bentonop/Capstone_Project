@@ -99,8 +99,8 @@ export default function AdminPlanesPage() {
 
   return (
     <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
-      <header className="pt-safe pb-4 px-margin-mobile flex items-center justify-between sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-surface-container shadow-sm">
-        <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Planes y Tienda</h1>
+      <header className="pt-safe pb-4 px-margin-mobile flex items-center justify-between sticky top-0 z-10 glass-panel border-x-0 border-t-0 rounded-none border-b border-surface-container shadow-sm">
+        <h1 className="font-headline-md text-headline-md gradient-text font-bold">Planes y Tienda</h1>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="h-10 px-4 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-sm"
@@ -165,7 +165,7 @@ export default function AdminPlanesPage() {
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-surface w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto pb-safe-offset-24 sm:pb-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="font-headline-sm font-bold text-on-surface">Nuevo Plan / Paquete</h2>
+              <h2 className="font-headline-sm font-bold gradient-text">Nuevo Plan / Paquete</h2>
               <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant"><span className="material-symbols-outlined text-[18px]">close</span></button>
             </div>
             

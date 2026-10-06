@@ -123,7 +123,7 @@ export default function ProfesorMetricasPage() {
     <div className="flex flex-col w-full min-h-screen bg-surface pb-24">
       {/* Header */}
       <div className="flex items-center justify-between px-margin-mobile pt-safe mt-4 mb-5">
-        <h1 className="font-headline-sm font-bold text-on-surface">Métricas y Desempeño</h1>
+        <h1 className="font-headline-sm font-bold gradient-text">Métricas y Desempeño</h1>
         <span className="font-label-xs bg-[#FFFDF5] border border-[#FBEFA3] text-[#D4AF37] px-3 py-1 rounded-full font-bold shadow-sm">Mes en curso</span>
       </div>
 
@@ -139,13 +139,13 @@ export default function ProfesorMetricasPage() {
         </div>
 
         {/* Classes Card */}
-        <div className="flex-1 bg-surface-container-lowest border border-surface-container rounded-2xl flex flex-col items-center justify-center py-4 shadow-sm">
+        <div className="flex-1 premium-card rounded-2xl flex flex-col items-center justify-center py-4 shadow-sm">
           <span className="font-headline-lg font-bold text-on-surface leading-none mb-1.5">{totalClasses}</span>
           <span className="font-label-xs uppercase tracking-wider text-secondary font-bold">Clases</span>
         </div>
 
         {/* Students Card */}
-        <div className="flex-1 bg-surface-container-lowest border border-surface-container rounded-2xl flex flex-col items-center justify-center py-4 shadow-sm">
+        <div className="flex-1 premium-card rounded-2xl flex flex-col items-center justify-center py-4 shadow-sm">
           <span className="font-headline-lg font-bold text-on-surface leading-none mb-1.5">{totalStudents}</span>
           <span className="font-label-xs uppercase tracking-wider text-secondary font-bold">Alumnos</span>
         </div>
@@ -155,7 +155,7 @@ export default function ProfesorMetricasPage() {
       <div className="px-margin-mobile mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h2 className="font-headline-sm font-bold text-on-surface capitalize">
+            <h2 className="font-headline-sm font-bold gradient-text capitalize">
               {selectedDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
             </h2>
             <span className="font-label-xs bg-surface-container px-2.5 py-1 rounded-md text-secondary font-bold">
@@ -223,18 +223,18 @@ export default function ProfesorMetricasPage() {
             <span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span>
           </div>
         ) : dayClasses.length === 0 ? (
-          <div className="py-10 bg-surface-container-lowest border border-surface-container rounded-3xl flex flex-col items-center text-center shadow-sm">
+          <div className="py-10 premium-card rounded-3xl flex flex-col items-center text-center shadow-sm">
             <span className="material-symbols-outlined text-[48px] text-surface-variant mb-3">event_busy</span>
-            <h3 className="font-headline-sm font-bold text-on-surface">Sin clases</h3>
+            <h3 className="font-headline-sm font-bold gradient-text">Sin clases</h3>
             <p className="font-body-sm text-secondary mt-1">No hay historial de clases para este día.</p>
           </div>
         ) : (
           dayClasses.map(cls => (
             <Link key={cls.id} href={`/profesor/clase/${cls.id}`}>
-              <article className="bg-surface-container-lowest border border-surface-container rounded-3xl p-5 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:border-[#D4AF37]/40 transition-all active:scale-[0.98]">
+              <article className="premium-card rounded-3xl p-5 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:border-[#D4AF37]/40 transition-all active:scale-[0.98]">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-2.5">
-                    <h4 className="font-headline-sm font-bold text-on-surface">{cls.name}</h4>
+                    <h4 className="font-headline-sm font-bold gradient-text">{cls.name}</h4>
                     <span className="font-label-xs bg-primary/15 text-primary px-2.5 py-0.5 rounded-md font-bold">{cls.level}</span>
                   </div>
                   <div className="flex items-center gap-1.5 font-body-sm text-secondary">

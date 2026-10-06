@@ -222,7 +222,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
           </section>
 
           <section className="px-margin-mobile py-space-xs">
-            <div className="bg-surface-container-lowest border border-surface-container/50 rounded-2xl p-space-md shadow-md flex flex-col">
+            <div className="premium-card/50 rounded-2xl p-space-md shadow-md flex flex-col">
               <div className="flex items-center justify-between mb-space-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -323,7 +323,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
               {students.map((student) => (
                 <div 
                   key={student.id} 
-                  className={`rounded-xl p-space-sm flex flex-col gap-2 transition-all cursor-pointer ${student.status === 'cancelado' ? 'bg-surface-container/50 opacity-60 border border-transparent' : 'bg-surface-container-lowest border border-surface-container-high hover:border-primary/30'} ${selectedStudent?.id === student.id ? 'ring-1 ring-primary' : ''}`}
+                  className={`rounded-xl p-space-sm flex flex-col gap-2 transition-all cursor-pointer ${student.status === 'cancelado' ? 'bg-surface-container/50 opacity-60 border border-transparent' : 'premium-card-high hover:border-primary/30'} ${selectedStudent?.id === student.id ? 'ring-1 ring-primary' : ''}`}
                   onClick={() => setSelectedStudent(selectedStudent?.id === student.id ? null : student)}
                 >
                   <div className="flex items-center justify-between gap-space-xs">

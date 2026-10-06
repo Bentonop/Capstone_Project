@@ -274,13 +274,13 @@ export default function AdminGestionPage() {
   return (
     <div className="flex flex-col w-full pb-24 bg-surface min-h-screen">
       
-      <section className="px-gutter-mobile pt-space-md sticky top-0 bg-surface/90 backdrop-blur-md z-10 pb-2 border-b border-surface-container shadow-sm">
+      <section className="px-gutter-mobile pt-space-md sticky top-0 glass-panel border-x-0 border-t-0 rounded-none z-10 pb-2 border-b border-surface-container shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Gestión Academia</h1>
+          <h1 className="font-headline-md text-headline-md gradient-text font-bold">Gestión Academia</h1>
           {activeTab === "staff" && (
             <button 
               onClick={() => setIsInviteModalOpen(true)}
-              className="px-4 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+              className="px-4 h-10 rounded-full premium-btn flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
             >
               <span className="material-symbols-outlined text-[20px]">mail</span>
               Invitar
@@ -292,7 +292,7 @@ export default function AdminGestionPage() {
                 setTDays([selectedDay]);
                 setIsAddingTemplate(true);
               }}
-              className="px-3 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+              className="px-3 h-10 rounded-full premium-btn flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               Bloque
@@ -326,7 +326,7 @@ export default function AdminGestionPage() {
               <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Invitaciones Pendientes</h3>
               <div className="flex flex-col gap-3">
                 {invitaciones.map((inv) => (
-                  <article key={inv.correo} className="flex items-center justify-between p-4 bg-surface-container-low border border-dashed border-surface-container-highest rounded-2xl">
+                  <article key={inv.correo} className="flex items-center justify-between p-4 premium-card border-dashed rounded-2xl">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
                         <span className="material-symbols-outlined">mail</span>
@@ -350,7 +350,7 @@ export default function AdminGestionPage() {
             <p className="text-center text-on-surface-variant my-10">No hay profesores en el equipo.</p>
           ) : (
             profesores.map(prof => (
-              <article key={prof.id} onClick={() => { setSelectedProf(prof); setEditName(prof.name||""); setEditLastName(prof.last_name||""); setEditPhone(prof.phone||""); setEditSala(prof.sala_por_defecto||""); }} className="p-4 rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm flex items-center justify-between cursor-pointer">
+              <article key={prof.id} onClick={() => { setSelectedProf(prof); setEditName(prof.name||""); setEditLastName(prof.last_name||""); setEditPhone(prof.phone||""); setEditSala(prof.sala_por_defecto||""); }} className="p-4 rounded-2xl premium-card p-4 flex items-center justify-between cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xl">
                     {prof.name ? prof.name.charAt(0) : 'P'}
@@ -377,7 +377,7 @@ export default function AdminGestionPage() {
         <section className="px-gutter-mobile mt-space-md animate-in fade-in">
           <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-4 pb-2 -mx-gutter-mobile px-gutter-mobile">
             {daysFilter.map(day => (
-              <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "bg-[#D4AF37] text-white shadow-md" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}>
+              <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "premium-btn shadow-md" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}>
                 {day}
               </button>
             ))}
@@ -419,15 +419,15 @@ export default function AdminGestionPage() {
       {activeTab === "types" && (
         <section className="px-gutter-mobile mt-space-md flex flex-col gap-space-md animate-in fade-in">
           <div className="bg-surface-container-low rounded-2xl p-5 border border-surface-container">
-            <h2 className="font-headline-sm font-bold text-on-surface mb-2">Crear Disciplina</h2>
+            <h2 className="font-headline-sm font-bold gradient-text mb-2">Crear Disciplina</h2>
             <form onSubmit={handleAddType} className="flex gap-2">
-              <input required type="text" placeholder="Ej. Pilates Reformer" value={newTypeName} onChange={(e) => setNewTypeName(e.target.value)} className="flex-1 h-12 bg-surface-container border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" />
+              <input required type="text" placeholder="Ej. Pilates Reformer" value={newTypeName} onChange={(e) => setNewTypeName(e.target.value)} className="flex-1 h-12 glass-panel border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" />
               <button type="submit" disabled={isAdding || !newTypeName.trim()} className="h-12 px-6 rounded-xl bg-primary text-on-primary font-bold">Añadir</button>
             </form>
           </div>
           <div className="flex flex-col gap-2">
             {classTypes.map((type) => (
-              <article key={type.id} className="flex items-center justify-between bg-surface-container-lowest border border-surface-container rounded-xl p-4">
+              <article key={type.id} className="flex items-center justify-between premium-card rounded-xl p-4">
                 <span className="font-body-md text-on-surface font-semibold">{type.nombre}</span>
                 <button onClick={() => handleDeleteType(type.id)} className="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center"><span className="material-symbols-outlined text-[18px]">delete</span></button>
               </article>
@@ -440,9 +440,9 @@ export default function AdminGestionPage() {
       {activeTab === "salas" && (
         <section className="px-gutter-mobile mt-space-md flex flex-col gap-space-md animate-in fade-in">
           <div className="bg-surface-container-low rounded-2xl p-5 border border-surface-container">
-            <h2 className="font-headline-sm font-bold text-on-surface mb-2">Crear Sala de Clases</h2>
+            <h2 className="font-headline-sm font-bold gradient-text mb-2">Crear Sala de Clases</h2>
             <form onSubmit={handleAddRoom} className="flex gap-2">
-              <input required type="text" placeholder="Ej. Sala Pole 1" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} className="flex-1 h-12 bg-surface-container border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" />
+              <input required type="text" placeholder="Ej. Sala Pole 1" value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)} className="flex-1 h-12 glass-panel border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" />
               <button type="submit" disabled={isAdding || !newRoomName.trim()} className="h-12 px-6 rounded-xl bg-primary text-on-primary font-bold">Añadir</button>
             </form>
           </div>
@@ -451,7 +451,7 @@ export default function AdminGestionPage() {
                <p className="text-body-sm text-on-surface-variant italic">Ejecuta salas.sql en Supabase primero si da error.</p>
             ) : (
               salas.map((sala) => (
-                <article key={sala.id} className="flex items-center justify-between bg-surface-container-lowest border border-surface-container rounded-xl p-4">
+                <article key={sala.id} className="flex items-center justify-between premium-card rounded-xl p-4">
                   <span className="font-body-md text-on-surface font-semibold">{sala.nombre}</span>
                   <button onClick={() => handleDeleteRoom(sala.id)} className="w-8 h-8 rounded-full bg-error/10 text-error flex items-center justify-center"><span className="material-symbols-outlined text-[18px]">delete</span></button>
                 </article>
@@ -464,7 +464,7 @@ export default function AdminGestionPage() {
       {/* MODAL: ADD TEMPLATE */}
       {isAddingTemplate && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-headline-md font-bold text-on-surface">Nuevo Bloque Múltiple</h3>
               <button onClick={() => setIsAddingTemplate(false)} className="w-8 h-8 flex items-center justify-center bg-surface-container rounded-full">
@@ -480,7 +480,7 @@ export default function AdminGestionPage() {
                       key={day} 
                       type="button" 
                       onClick={() => toggleTDay(day)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${tDays.includes(day) ? 'bg-[#D4AF37] text-white' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${tDays.includes(day) ? 'premium-btn' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'}`}
                     >
                       {day}
                     </button>
@@ -529,7 +529,7 @@ export default function AdminGestionPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-4 shadow-md">
+              <button type="submit" className="w-full h-12 premium-btn font-bold rounded-xl mt-4 shadow-md">
                 Crear Bloque Fijo
               </button>
             </form>
@@ -540,7 +540,7 @@ export default function AdminGestionPage() {
       {/* MODAL: EDIT PROFESSOR */}
       {selectedProf && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-headline-md font-bold text-on-surface">Modificar Profesor</h3>
               <button onClick={() => setSelectedProf(null)} className="w-8 h-8 flex items-center justify-center bg-surface-container rounded-full">
@@ -569,9 +569,9 @@ export default function AdminGestionPage() {
       {/* MODAL: INVITAR PROFESOR */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
-          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-headline-sm font-bold text-on-surface">Invitar Profesor</h3>
+              <h3 className="font-headline-sm font-bold gradient-text">Invitar Profesor</h3>
               <button onClick={() => setIsInviteModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
             </div>
             <p className="text-body-sm text-on-surface-variant mb-2">Ingresa el correo del nuevo profesor. Solo los correos invitados podrán registrarse y obtendrán el rol de profesor automáticamente.</p>
@@ -584,7 +584,7 @@ export default function AdminGestionPage() {
                 onChange={e => setInviteEmail(e.target.value)} 
                 className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none focus:border-primary border border-transparent" 
               />
-              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-2 shadow-md">
+              <button type="submit" className="w-full h-12 premium-btn font-bold rounded-xl mt-2 shadow-md">
                 Enviar Invitación
               </button>
             </form>

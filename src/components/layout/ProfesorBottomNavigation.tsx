@@ -29,7 +29,7 @@ export function ProfesorBottomNavigation() {
 
   return (
     <nav className="fixed bottom-3 inset-x-margin-mobile z-50 pb-safe">
-      <div className="h-16 bg-surface-container-lowest/95 backdrop-blur-xl rounded-xl shadow-[0_12px_32px_-4px_rgba(0,0,0,0.4),0_4px_12px_-2px_rgba(0,0,0,0.2)] flex items-center justify-around px-space-xs border border-surface-container">
+      <div className="h-16 glass-panel flex items-center justify-around px-space-xs">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.match);
           
@@ -38,7 +38,7 @@ export function ProfesorBottomNavigation() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors gap-0.5 ${
-                isActive ? "text-primary font-bold" : "text-on-surface-variant hover:text-on-surface"
+                isActive ? "bottom-nav-active font-bold" : "bottom-nav-inactive hover:text-main"
               }`}
             >
               <span className={`material-symbols-outlined text-[24px] ${isActive ? "[font-variation-settings:'FILL'1]" : ""}`}>

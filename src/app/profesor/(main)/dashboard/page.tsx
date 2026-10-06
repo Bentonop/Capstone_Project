@@ -196,9 +196,9 @@ export default function ProfesorDashboardPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-space-sm">
             <div className="relative">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high shadow-md">
+              <div className="w-12 h-12 avatar-soft shadow-md">
                 {/* Fallback avatar */}
-                <div className="w-full h-full flex items-center justify-center text-primary font-bold text-lg uppercase">
+                <div className="w-full h-full flex items-center justify-center font-bold text-lg uppercase">
                   {profileInitials}
                 </div>
               </div>
@@ -298,8 +298,8 @@ export default function ProfesorDashboardPage() {
                     <span className={`font-headline-sm text-headline-sm ${isFull ? 'text-error' : (isDark ? 'text-primary' : 'text-primary')}`}>
                       {cls.enrolled}<span className="font-body-sm text-body-sm opacity-70 font-normal">/{cls.maxCapacity}</span>
                     </span>
-                    <span className={`font-label-caps text-label-caps font-bold ${isFull ? 'text-error' : (isDark ? 'text-primary' : 'text-primary')}`}>
-                      {isFull ? '¡Clase Llena!' : `${Math.round(progressPercent)}% Cupo`}
+                    <span className={`font-label-caps text-label-caps font-bold flex items-center gap-1 ${isFull ? 'badge-full' : 'badge-available'}`}>
+                      {isFull ? '🔴 100% — COMPLETO' : progressPercent >= 88 ? `🟠 ${Math.round(progressPercent)}% Cupo` : progressPercent >= 75 ? `🟡 ${Math.round(progressPercent)}% Cupo` : `🟢 ${Math.round(progressPercent)}% Cupo`}
                     </span>
                   </div>
                 )}
@@ -332,7 +332,7 @@ export default function ProfesorDashboardPage() {
                   <div className={`pt-2 flex ${isFull ? 'items-center gap-2.5' : 'flex-col gap-2.5'}`}>
                     <Link 
                       href={`/profesor/clase/${cls.id}`} 
-                      className={`${isFull ? 'flex-1 h-11' : 'w-full h-12'} rounded-xl bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center justify-center gap-2 shadow-md shadow-primary/30 active:scale-95 transition-transform`}
+                      className={`${isFull ? 'flex-1 h-11' : 'w-full h-12'} premium-btn flex items-center justify-center gap-2`}
                     >
                       <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
                       {isFull ? 'Pase QR' : 'Pase de Lista & Escanear QR'}
