@@ -38,6 +38,10 @@ export default function AdminAlumnosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  const [invitaciones, setInvitaciones] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
   // Ficha Medica Edit Modal State
   const [editingAlumno, setEditingAlumno] = useState<Profile | null>(null);
   const [editEmergencia, setEditEmergencia] = useState("");
@@ -50,7 +54,10 @@ export default function AdminAlumnosPage() {
   };
 
   useEffect(() => {
-    if (activeTab === "alumnos") fetchAlumnos();
+    if (activeTab === "alumnos") {
+      fetchAlumnos();
+      fetchInvitaciones();
+    }
     else fetchPagos();
   }, [activeTab]);
 
@@ -72,6 +79,33 @@ export default function AdminAlumnosPage() {
       setIsLoading(false);
     }
   }
+
+  async function fetchInvitaciones() {
+    if (!supabase) return;
+    const { data } = await supabase.from("roles_whitelist").select("*").eq("rol_asignado", "alumno");
+    if (data) setInvitaciones(data);
+  }
+
+  const handleInvitar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !inviteEmail.trim()) return;
+    const { error } = await supabase.from("roles_whitelist").insert([{ correo: inviteEmail.trim().toLowerCase(), rol_asignado: "alumno" }]);
+    if (error) {
+      alert("Error al invitar. Quizás el correo ya está invitado.");
+    } else {
+      showToast("Invitación enviada exitosamente.");
+      setInviteEmail("");
+      setIsInviteModalOpen(false);
+      fetchInvitaciones();
+    }
+  };
+
+  const handleCancelarInvitacion = async (correo: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Cancelar la invitación a ${correo}?`)) return;
+    await supabase.from("roles_whitelist").delete().eq("correo", correo);
+    fetchInvitaciones();
+  };
 
   async function fetchPagos() {
     try {
@@ -175,7 +209,18 @@ export default function AdminAlumnosPage() {
   return (
     <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
       <header className="pt-safe pb-4 px-margin-mobile flex flex-col justify-end sticky top-0 z-10 bg-surface/90 backdrop-blur-md border-b border-surface-container shadow-sm min-h-[90px]">
-        <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Gestión de Alumnos</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="font-headline-md text-headline-md text-on-surface font-bold">Gestión de Alumnos</h1>
+          {activeTab === "alumnos" && (
+            <button 
+              onClick={() => setIsInviteModalOpen(true)}
+              className="px-4 h-10 rounded-full bg-[#D4AF37] text-white flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">mail</span>
+              Invitar
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Tabs */}
@@ -209,6 +254,31 @@ export default function AdminAlumnosPage() {
                 className="bg-transparent border-none outline-none flex-1 font-body-md text-on-surface placeholder:text-on-surface-variant"
               />
             </div>
+
+            {/* INVITACIONES PENDIENTES */}
+            {invitaciones.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Invitaciones Pendientes</h3>
+                <div className="flex flex-col gap-3">
+                  {invitaciones.map((inv) => (
+                    <article key={inv.correo} className="flex items-center justify-between p-4 bg-surface-container-low border border-dashed border-surface-container-highest rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
+                          <span className="material-symbols-outlined">mail</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-body-md text-on-surface font-semibold">{inv.correo}</span>
+                          <span className="font-body-sm text-secondary">Pendiente de registro</span>
+                        </div>
+                      </div>
+                      <button onClick={() => handleCancelarInvitacion(inv.correo)} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                        <span className="material-symbols-outlined">cancel</span>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="flex justify-center p-10"><span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span></div>
@@ -445,6 +515,32 @@ export default function AdminAlumnosPage() {
                 Guardar Ficha
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: INVITAR ALUMNO */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
+          <div className="bg-surface-container-lowest w-full rounded-t-3xl p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-sm font-bold text-on-surface">Invitar Alumno</h3>
+              <button onClick={() => setIsInviteModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
+            </div>
+            <p className="text-body-sm text-on-surface-variant mb-2">Ingresa el correo del alumno. Solo podrá registrarse y acceder a la academia si su correo está en esta lista de invitados.</p>
+            <form onSubmit={handleInvitar} className="flex flex-col gap-4">
+              <input 
+                required 
+                type="email" 
+                placeholder="correo@ejemplo.com" 
+                value={inviteEmail} 
+                onChange={e => setInviteEmail(e.target.value)} 
+                className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none focus:border-primary border border-transparent" 
+              />
+              <button type="submit" className="w-full h-12 bg-[#D4AF37] text-white font-bold rounded-xl mt-2 shadow-md">
+                Enviar Invitación
+              </button>
+            </form>
           </div>
         </div>
       )}
