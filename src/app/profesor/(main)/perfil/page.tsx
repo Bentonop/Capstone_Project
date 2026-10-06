@@ -209,21 +209,13 @@ export default function PerfilProfesorPage() {
           </div>
 
           {/* Estadísticas Rápidas */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4">
              <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container flex flex-col gap-2 shadow-sm relative overflow-hidden group hover:border-primary/30 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-secondary-container text-secondary flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                    <span className="material-symbols-outlined text-[24px]">local_fire_department</span>
                 </div>
                 <span className="font-display-md text-on-surface font-bold">{clases.length > 0 ? clases.length * 4 : '12'}</span>
                 <span className="font-label-sm text-on-surface-variant uppercase tracking-wider">Clases este mes</span>
-             </div>
-             
-             <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container flex flex-col gap-2 shadow-sm relative overflow-hidden group hover:border-tertiary/30 transition-colors">
-                <div className="w-12 h-12 rounded-full bg-tertiary-container text-tertiary flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-                   <span className="material-symbols-outlined text-[24px]">star</span>
-                </div>
-                <span className="font-display-md text-on-surface font-bold">4.9</span>
-                <span className="font-label-sm text-on-surface-variant uppercase tracking-wider">Calificación P.</span>
              </div>
           </div>
 
