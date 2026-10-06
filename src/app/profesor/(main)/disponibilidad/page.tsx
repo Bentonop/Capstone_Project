@@ -7,6 +7,7 @@ export default function DisponibilidadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [classTypes, setClassTypes] = useState<string[]>([]);
+  const [salasDb, setSalasDb] = useState<{nombre: string}[]>([]);
   
   // Default to today
   const today = new Date().toISOString().split('T')[0];
@@ -15,31 +16,45 @@ export default function DisponibilidadPage() {
     fecha: today,
     hora_inicio: "10:00",
     nombre_clase: "",
-    sala: "Sala Pole 1",
+    sala: "",
     descripcion: "Traer botella de agua, toalla personal y alcohol (magnesio líquido opcional)."
   });
 
   useEffect(() => {
-    async function fetchClassTypes() {
+    async function fetchData() {
       if (!supabase) return;
-      const { data, error } = await supabase
+      
+      // Fetch Tipos de Clase
+      const { data: clasesData } = await supabase
         .from('tipos_clase')
         .select('nombre')
         .order('created_at', { ascending: true });
         
-      if (!error && data) {
-        const uniqueClasses = data.map(c => c.nombre).filter(Boolean) as string[];
-        setClassTypes(uniqueClasses);
+      // Fetch Salas
+      const { data: salasData } = await supabase
+        .from('salas')
+        .select('nombre')
+        .order('created_at', { ascending: true });
         
-        if (uniqueClasses.length > 0) {
-          // Only update if current value is not in the new list, to avoid resetting on re-fetch
-          setFormData(prev => uniqueClasses.includes(prev.nombre_clase) ? prev : { ...prev, nombre_clase: uniqueClasses[0] });
-        } else {
-          setFormData(prev => ({ ...prev, nombre_clase: "" }));
-        }
+      if (clasesData) {
+        const uniqueClasses = clasesData.map(c => c.nombre).filter(Boolean) as string[];
+        setClassTypes(uniqueClasses);
+        setFormData(prev => ({ 
+          ...prev, 
+          nombre_clase: uniqueClasses.includes(prev.nombre_clase) ? prev.nombre_clase : (uniqueClasses[0] || "") 
+        }));
+      }
+
+      if (salasData) {
+        const uniqueSalas = salasData as {nombre: string}[];
+        setSalasDb(uniqueSalas);
+        setFormData(prev => ({ 
+          ...prev, 
+          sala: uniqueSalas.length > 0 ? (uniqueSalas.find(s => s.nombre === prev.sala)?.nombre || uniqueSalas[0].nombre) : "" 
+        }));
       }
     }
-    fetchClassTypes();
+    fetchData();
   }, []);
 
   const showToast = (msg: string) => {
@@ -199,11 +214,16 @@ export default function DisponibilidadPage() {
               name="sala" 
               value={formData.sala}
               onChange={handleInputChange}
-              className="w-full h-14 bg-surface-container-low border border-surface-container-highest rounded-xl px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none transition-colors"
+              disabled={salasDb.length === 0}
+              className="w-full h-14 bg-surface-container-low border border-surface-container-highest rounded-xl px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none transition-colors disabled:opacity-50"
             >
-              <option value="Sala Pole 1">Sala Pole 1 (Cap: 8)</option>
-              <option value="Sala Pole Principal">Sala Pole Principal (Cap: 8)</option>
-              <option value="Sala Multiuso">Sala Multiuso</option>
+              {salasDb.length === 0 ? (
+                <option value="" disabled>Aún no hay salas creadas por Admin</option>
+              ) : (
+                salasDb.map((sala, idx) => (
+                  <option key={idx} value={sala.nombre}>{sala.nombre}</option>
+                ))
+              )}
             </select>
           </div>
 
@@ -242,7 +262,7 @@ export default function DisponibilidadPage() {
 
           <button 
             type="submit"
-            disabled={isSubmitting || classTypes.length === 0}
+            disabled={isSubmitting || classTypes.length === 0 || salasDb.length === 0}
             className="w-full h-14 mt-4 rounded-xl bg-primary text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all disabled:opacity-70 disabled:active:scale-100"
           >
             {isSubmitting ? (
