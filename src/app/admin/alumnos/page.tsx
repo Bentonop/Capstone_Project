@@ -13,7 +13,7 @@ interface Profile {
   active: boolean;
   role: string;
   contacto_emergencia?: string | null;
-  ficha_medica?: string | null;
+  condicion_medica?: string | null;
   created_at: string;
 }
 
@@ -158,7 +158,7 @@ export default function AdminAlumnosPage() {
         .from("profiles")
         .update({
           contacto_emergencia: editEmergencia,
-          ficha_medica: editFicha
+          condicion_medica: editFicha
         })
         .eq("id", editingAlumno.id);
       
@@ -253,8 +253,8 @@ export default function AdminAlumnosPage() {
                           {alumno.contacto_emergencia && (
                             <span className="font-label-sm"><strong className="text-on-surface">Emergencia:</strong> {alumno.contacto_emergencia}</span>
                           )}
-                          {alumno.ficha_medica ? (
-                            <span className="font-body-xs italic line-clamp-2" title={alumno.ficha_medica}>{alumno.ficha_medica}</span>
+                          {alumno.condicion_medica ? (
+                            <span className="font-body-xs italic line-clamp-2" title={alumno.condicion_medica}>{alumno.condicion_medica}</span>
                           ) : (
                             <span className="font-body-xs italic text-secondary">Sin ficha médica registrada</span>
                           )}
@@ -263,7 +263,7 @@ export default function AdminAlumnosPage() {
                           onClick={() => {
                             setEditingAlumno(alumno);
                             setEditEmergencia(alumno.contacto_emergencia || "");
-                            setEditFicha(alumno.ficha_medica || "");
+                            setEditFicha(alumno.condicion_medica || "");
                           }}
                           className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center transition-colors shrink-0 text-on-surface-variant hover:text-on-surface"
                           title="Editar Ficha"

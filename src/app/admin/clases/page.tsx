@@ -453,11 +453,6 @@ export default function AdminGestionPage() {
                 <label className="text-xs font-bold text-secondary mb-1 block">Disciplina / Nivel</label>
                 <select required value={tName} onChange={e => setTName(e.target.value)} className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none appearance-none">
                   <option value="">Selecciona disciplina...</option>
-                  <option value="Experto">Experto</option>
-                  <option value="Intermedio">Intermedio</option>
-                  <option value="Básico">Básico</option>
-                  <option value="Pole Sport">Pole Sport</option>
-                  <option value="Flex">Flex</option>
                   {classTypes.map(t => (
                     <option key={t.id} value={t.nombre}>{t.nombre}</option>
                   ))}
