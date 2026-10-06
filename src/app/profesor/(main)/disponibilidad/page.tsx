@@ -59,16 +59,29 @@ export default function DisponibilidadPage() {
     try {
       if (!supabase) throw new Error("Supabase client is not configured");
 
-      // Calcular fechas
-      // formData.fecha = "2025-03-19", formData.hora_inicio = "10:00"
-      const startDateTime = new Date(`${formData.fecha}T${formData.hora_inicio}:00`);
+      // Calcular fechas de forma segura para la zona horaria local
+      const [year, month, day] = formData.fecha.split('-').map(Number);
+      const [hour, minute] = formData.hora_inicio.split(':').map(Number);
+      const startDateTime = new Date(year, month - 1, day, hour, minute, 0);
       
       // Añadir 75 minutos
       const endDateTime = new Date(startDateTime.getTime() + 75 * 60000);
 
+      // Obtener el ID del profesor (simulado buscando el primer profesor en la BD)
+      const { data: profData, error: profError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'profesor')
+        .limit(1)
+        .single();
+
+      if (profError || !profData) {
+        throw new Error("No se pudo obtener el perfil de profesor de la base de datos.");
+      }
+
       // Preparar payload
       const payload = {
-        // id_profesor: "00000000-0000-0000-0000-000000000000", // En producción se sacaría de auth.user
+        id_profesor: profData.id,
         nombre_clase: formData.nombre_clase,
         cupo_maximo: 8,
         cupos_inscritos: 0,
@@ -83,21 +96,20 @@ export default function DisponibilidadPage() {
       const { error } = await supabase.from('clase').insert([payload]);
       
       if (error) {
-        console.warn("Supabase Error (probablemente RLS o falta id_profesor). Simulando éxito para demo:", error);
-        // Si hay error por falta de RLS/Auth en la demo, lo dejamos pasar como éxito visualmente.
+        throw new Error(`Error BD: ${error.message}`);
       }
 
       showToast("¡Clase publicada con éxito! Ya está disponible para reserva.");
       
-      // Reset form a little bit, advance time maybe
+      // Reset form
       setFormData(prev => ({
         ...prev,
         hora_inicio: "12:00" 
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showToast("¡Clase publicada con éxito! (Modo Demo)");
+      showToast(error.message || "Ocurrió un error al publicar la clase.");
     } finally {
       setIsSubmitting(false);
     }
