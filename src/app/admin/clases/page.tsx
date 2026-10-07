@@ -31,6 +31,7 @@ export default function AdminGestionPage() {
   const [tStartTime, setTStartTime] = useState("18:00");
   const [tEndTime, setTEndTime] = useState("19:15");
   const [tDays, setTDays] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const toggleTDay = (day: string) => {
     setTDays(prev => 
@@ -118,7 +119,25 @@ export default function AdminGestionPage() {
     if (error) {
       alert("Error al invitar. Quizás el correo ya está invitado.");
     } else {
-      showToast(`Invitación enviada. Código: ${codigoInvitacion}`);
+      showToast(`Invitación enviada. Enviando correo...`);
+      
+      // Call our API to send the email via Resend
+      try {
+        await fetch('/api/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: inviteEmail.trim().toLowerCase(),
+            role: "profesor",
+            code: codigoInvitacion
+          })
+        });
+        showToast("¡Correo enviado con éxito!");
+      } catch (e) {
+        console.error("No se pudo enviar el correo", e);
+        showToast("Error al enviar el correo, pero el código es válido.");
+      }
+
       setInviteEmail("");
       setIsInviteModalOpen(false);
       fetchInvitaciones();
@@ -279,6 +298,84 @@ export default function AdminGestionPage() {
     fetchPlantillas();
   };
 
+  const handleGenerateClasses = async () => {
+    if (!supabase) return;
+    if (!window.confirm("Esto generará las clases reales en el calendario para las próximas 4 semanas usando las plantillas actuales. Las clases que ya existen no se duplicarán. ¿Deseas continuar?")) return;
+    
+    setIsGenerating(true);
+    showToast("Generando clases, por favor espera...");
+    
+    try {
+      const { data: templates, error: templatesError } = await supabase.from('plantillas_clase').select('*');
+      if (templatesError) throw templatesError;
+      if (!templates || templates.length === 0) {
+         showToast("No hay plantillas para generar.");
+         setIsGenerating(false);
+         return;
+      }
+      
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      const futureDate = new Date(today);
+      futureDate.setDate(today.getDate() + 28);
+      
+      const { data: existingClasses } = await supabase.from('clase')
+          .select('nombre_clase, fecha_hora_inicio')
+          .gte('fecha_hora_inicio', today.toISOString())
+          .lte('fecha_hora_inicio', futureDate.toISOString());
+          
+      const existingSet = new Set((existingClasses || []).map(c => `${c.nombre_clase}_${c.fecha_hora_inicio}`));
+      
+      const inserts = [];
+      
+      for (let i = 0; i < 28; i++) {
+         const currentDate = new Date(today);
+         currentDate.setDate(today.getDate() + i);
+         const currentDayNum = currentDate.getDay(); 
+         
+         const matchingTemplates = templates.filter(t => t.dia_semana === currentDayNum);
+         
+         matchingTemplates.forEach(t => {
+            const startDate = new Date(currentDate);
+            const [sh, sm] = t.hora_inicio.split(':');
+            startDate.setHours(parseInt(sh), parseInt(sm), 0, 0);
+            
+            const endDate = new Date(currentDate);
+            const [eh, em] = t.hora_fin.split(':');
+            endDate.setHours(parseInt(eh), parseInt(em), 0, 0);
+            
+            const key = `${t.nombre_clase}_${startDate.toISOString()}`;
+            
+            if (!existingSet.has(key)) {
+                inserts.push({
+                   nombre_clase: t.nombre_clase,
+                   fecha_hora_inicio: startDate.toISOString(),
+                   fecha_hora_fin: endDate.toISOString(),
+                   id_profesor: t.id_profesor,
+                   sala: t.sala,
+                   cupo_maximo: t.cupo_maximo,
+                   estado_clase: "programada"
+                });
+            }
+         });
+      }
+      
+      if (inserts.length > 0) {
+        const { error: insertError } = await supabase.from('clase').insert(inserts);
+        if (insertError) throw insertError;
+        showToast(`¡Éxito! Se generaron ${inserts.length} nuevas clases para el mes.`);
+      } else {
+        showToast(`Todo al día. No hubo clases nuevas que generar.`);
+      }
+      
+    } catch (err: any) {
+      console.error(err);
+      alert("Error al generar las clases: " + err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full pb-24 bg-surface min-h-screen">
@@ -296,16 +393,26 @@ export default function AdminGestionPage() {
             </button>
           )}
           {activeTab === "calendar" && (
-            <button 
-              onClick={() => {
-                setTDays([selectedDay]);
-                setIsAddingTemplate(true);
-              }}
-              className="px-3 h-10 rounded-full premium-btn flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
-            >
-              <span className="material-symbols-outlined text-[20px]">add</span>
-              Bloque
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleGenerateClasses}
+                disabled={isGenerating}
+                className="px-3 h-10 rounded-full bg-secondary text-on-secondary flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[20px]">{isGenerating ? 'sync' : 'event_repeat'}</span>
+                {isGenerating ? '...' : 'Repetir'}
+              </button>
+              <button 
+                onClick={() => {
+                  setTDays([selectedDay]);
+                  setIsAddingTemplate(true);
+                }}
+                className="px-3 h-10 rounded-full premium-btn flex items-center gap-1 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">add</span>
+                Bloque
+              </button>
+            </div>
           )}
         </div>
         

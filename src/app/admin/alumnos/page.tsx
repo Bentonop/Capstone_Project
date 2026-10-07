@@ -102,7 +102,25 @@ export default function AdminAlumnosPage() {
     if (error) {
       alert("Error al invitar. Quizás el correo ya está invitado.");
     } else {
-      showToast(`Invitación enviada. Código: ${codigoInvitacion}`);
+      showToast(`Invitación enviada. Enviando correo...`);
+      
+      // Call our API to send the email via Resend
+      try {
+        await fetch('/api/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: inviteEmail.trim().toLowerCase(),
+            role: "alumno",
+            code: codigoInvitacion
+          })
+        });
+        showToast("¡Correo enviado con éxito!");
+      } catch (e) {
+        console.error("No se pudo enviar el correo", e);
+        showToast("Error al enviar el correo, pero el código es válido.");
+      }
+
       setInviteEmail("");
       setIsInviteModalOpen(false);
       fetchInvitaciones();

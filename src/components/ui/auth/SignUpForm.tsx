@@ -17,10 +17,12 @@ import { LoaderCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { AuthFormProps } from "./AuthForm";
 import { supabase } from "@/lib/supabase"; 
+import { useRouter } from "next/navigation"; 
 
 const SignUpForm = ({ setTypeSelected }: AuthFormProps) => {
 
     const [isLoading, setisLoading] = useState<boolean>(false)
+    const router = useRouter();
 
     // ============ Form ============
     // Eliminamos telefono_emergencia porque no está en tu nueva tabla
@@ -75,8 +77,25 @@ const SignUpForm = ({ setTypeSelected }: AuthFormProps) => {
 
             if (authError) throw authError;
 
-            toast.success('¡Cuenta creada exitosamente! Revisa tu correo.', { duration: 4000 });
-            setTypeSelected('sign-in');
+            // Si la cuenta se crea y se autologuea inmediatamente (ej. si no hay confirmación de correo obligatoria)
+            if (authData.session) {
+                // Obtener rol para redirigir
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', authData.user!.id)
+                    .single();
+                    
+                toast.success('¡Cuenta creada exitosamente!', { duration: 2500 });
+
+                if (profile?.role === 'administrador') router.push('/admin/dashboard');
+                else if (profile?.role === 'profesor') router.push('/profesor/dashboard');
+                else router.push('/alumno/dashboard');
+            } else {
+                // Si la sesión no viene, significa que debe confirmar el correo
+                toast.success('¡Cuenta creada exitosamente! Revisa tu correo.', { duration: 4000 });
+                setTypeSelected('sign-in'); // Lo mandamos al login para que inicie sesión
+            }
 
         } catch (error: any) {
             toast.error(error.message || 'Error al registrar el usuario', { duration: 4000 });
