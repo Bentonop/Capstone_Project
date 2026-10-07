@@ -21,13 +21,13 @@ export default function AlumnoPerfilPage() {
       setIsLoading(true);
       try {
         if (!supabase) throw new Error("No Supabase Client");
-        
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("role", "alumno")
-          .order("created_at", { ascending: true })
-          .limit(1)
+          .eq("id", authUser.id)
           .single();
 
         if (error && error.code !== 'PGRST116') throw error;

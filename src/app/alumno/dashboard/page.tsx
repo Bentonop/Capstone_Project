@@ -20,21 +20,12 @@ export default function AlumnoDashboard() {
           
         if (typesError) throw typesError;
 
-        // Fetch upcoming classes
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // Get classes for the next 7 days
-        const nextWeek = new Date(today);
-        nextWeek.setDate(today.getDate() + 7);
-
+        // Fetch templates
         const { data, error } = await supabase
-          .from("clase")
+          .from("plantillas_clase")
           .select("*")
-          .eq("estado_clase", "programada")
-          .gte("fecha_hora_inicio", today.toISOString())
-          .lte("fecha_hora_inicio", nextWeek.toISOString())
-          .order("fecha_hora_inicio", { ascending: true });
+          .order("dia_semana", { ascending: true })
+          .order("hora_inicio", { ascending: true });
 
         if (error) throw error;
 
@@ -60,28 +51,27 @@ export default function AlumnoDashboard() {
               return; // Skip if not in tipos_clase
             }
             
-            const start = new Date(c.fecha_hora_inicio);
-            const end = new Date(c.fecha_hora_fin);
-            
             const days = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
-            const dayName = days[start.getDay()];
+            const dayName = days[c.dia_semana];
             
-            const formatTime = (d: Date) => {
-              let h = d.getHours();
-              const m = d.getMinutes().toString().padStart(2, '0');
+            const formatTime = (timeString: string) => {
+              if (!timeString) return "";
+              const parts = timeString.split(':');
+              let h = parseInt(parts[0]);
+              const m = parts[1];
               const ampm = h >= 12 ? 'pm' : 'am';
               h = h % 12;
               h = h ? h : 12; 
               return `${h}:${m}${ampm}`;
             };
             
-            const timeStr = `${formatTime(start)} - ${formatTime(end)}`;
+            const timeStr = `${formatTime(c.hora_inicio)} - ${formatTime(c.hora_fin)}`;
             
             if (!classGroups[c.nombre_clase].schedulesMap[dayName]) {
               classGroups[c.nombre_clase].schedulesMap[dayName] = [];
             }
             
-            // Avoid duplicate times for the same day (e.g. if it's recurring or two classes same time)
+            // Avoid duplicate times for the same day
             if (!classGroups[c.nombre_clase].schedulesMap[dayName].includes(timeStr)) {
               classGroups[c.nombre_clase].schedulesMap[dayName].push(timeStr);
             }

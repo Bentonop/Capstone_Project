@@ -36,12 +36,13 @@ export default function ProfesorDashboardPage() {
     async function fetchProfile() {
       if (!supabase) return;
       try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+
         const { data: user } = await supabase
           .from("profiles")
           .select("*")
-          .eq("role", "profesor")
-          .order("created_at", { ascending: true })
-          .limit(1)
+          .eq("id", authUser.id)
           .single();
         
         if (user && user.name) {
@@ -67,9 +68,13 @@ export default function ProfesorDashboardPage() {
         const endOfDay = new Date(selectedDate);
         endOfDay.setHours(23, 59, 59, 999);
         
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+
         const { data, error } = await supabase
           .from("clase")
           .select("*")
+          .eq("id_profesor", authUser.id)
           .gte("fecha_hora_inicio", startOfDay.toISOString())
           .lte("fecha_hora_inicio", endOfDay.toISOString())
           .order("fecha_hora_inicio", { ascending: true });

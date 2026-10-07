@@ -23,14 +23,14 @@ export default function PerfilProfesorPage() {
   async function fetchData() {
     try {
       if (!supabase) return;
-      
-      // Get current mock teacher
+      // Get authenticated user
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
       const { data: user } = await supabase
         .from("profiles")
         .select("*")
-        .eq("role", "profesor")
-        .order("created_at", { ascending: true })
-        .limit(1)
+        .eq("id", authUser.id)
         .single();
         
       if (user) {
