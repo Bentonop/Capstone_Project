@@ -105,11 +105,20 @@ export default function AdminGestionPage() {
   const handleInvitar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase || !inviteEmail.trim()) return;
-    const { error } = await supabase.from("roles_whitelist").insert([{ correo: inviteEmail.trim().toLowerCase(), rol_asignado: "profesor" }]);
+    
+    // Generate a random 6-digit code
+    const codigoInvitacion = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    const { error } = await supabase.from("roles_whitelist").insert([{ 
+      correo: inviteEmail.trim().toLowerCase(), 
+      rol_asignado: "profesor",
+      codigo_invitacion: codigoInvitacion 
+    }]);
+    
     if (error) {
       alert("Error al invitar. Quizás el correo ya está invitado.");
     } else {
-      showToast("Invitación enviada exitosamente.");
+      showToast(`Invitación enviada. Código: ${codigoInvitacion}`);
       setInviteEmail("");
       setIsInviteModalOpen(false);
       fetchInvitaciones();

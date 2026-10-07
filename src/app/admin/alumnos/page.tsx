@@ -89,11 +89,20 @@ export default function AdminAlumnosPage() {
   const handleInvitar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase || !inviteEmail.trim()) return;
-    const { error } = await supabase.from("roles_whitelist").insert([{ correo: inviteEmail.trim().toLowerCase(), rol_asignado: "alumno" }]);
+    
+    // Generate a random 6-digit code
+    const codigoInvitacion = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    const { error } = await supabase.from("roles_whitelist").insert([{ 
+      correo: inviteEmail.trim().toLowerCase(), 
+      rol_asignado: "alumno",
+      codigo_invitacion: codigoInvitacion 
+    }]);
+    
     if (error) {
       alert("Error al invitar. Quizás el correo ya está invitado.");
     } else {
-      showToast("Invitación enviada exitosamente.");
+      showToast(`Invitación enviada. Código: ${codigoInvitacion}`);
       setInviteEmail("");
       setIsInviteModalOpen(false);
       fetchInvitaciones();
@@ -124,13 +133,13 @@ export default function AdminAlumnosPage() {
       // For each pago, fetch user info and plan info
       // In a real app this would be a join, doing it simply here for prototype
       const pagosEnriched = await Promise.all((pagosData || []).map(async (pago: any) => {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", pago.user_id).single();
+        const { data: profile } = await supabase!.from("profiles").select("*").eq("id", pago.user_id).single();
         
         // get suscripcion to get plan
-        const { data: suscripcion } = await supabase.from("user_suscripciones").select("plan_id").eq("id", pago.suscripcion_id).single();
+        const { data: suscripcion } = await supabase!.from("user_suscripciones").select("plan_id").eq("id", pago.suscripcion_id).single();
         let plan = null;
         if (suscripcion) {
-           const { data: planData } = await supabase.from("planes").select("nombre_plan, creditos_clases").eq("id_plan", suscripcion.plan_id).single();
+           const { data: planData } = await supabase!.from("planes").select("nombre_plan, creditos_clases").eq("id_plan", suscripcion.plan_id).single();
            plan = planData;
         }
         

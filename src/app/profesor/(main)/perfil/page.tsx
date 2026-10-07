@@ -61,7 +61,7 @@ export default function PerfilProfesorPage() {
     if (!profile) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await supabase!
         .from("profiles")
         .update({
           bio: formData.bio,
