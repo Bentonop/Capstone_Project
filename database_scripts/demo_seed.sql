@@ -45,19 +45,20 @@ VALUES
 ('c0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumno@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"333333"}', now(), now());
 
 -- Si el trigger no creó los perfiles (o lo borramos), los creamos a mano con UPSERT
-INSERT INTO public.profiles (id, name, last_name, correo, role, rut, phone, especialidad, condicion_medica) VALUES 
-('a0000000-0000-0000-0000-000000000001', 'Coordinación', 'Admin', 'admin@demo.com', 'administrador', NULL, NULL, NULL, NULL),
-('b0000000-0000-0000-0000-000000000002', 'Fernanda', 'Pánico', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Pole Dance y Exotic', NULL),
-('b0000000-0000-0000-0000-000000000003', 'Valentina', 'Flex', 'profe2@demo.com', 'profesor', '33333333-3', '+56933334444', 'Flexibilidad', NULL),
-('b0000000-0000-0000-0000-000000000004', 'Camila', 'Pole', 'profe3@demo.com', 'profesor', '44444444-4', '+56944445555', 'Pole Dance Básico', NULL),
-('c0000000-0000-0000-0000-000000000003', 'María', 'Estudiante', 'alumno@demo.com', 'alumno', '22222222-2', '+56988887777', NULL, 'Alergia a penicilina')
+INSERT INTO public.profiles (id, name, last_name, correo, role, rut, phone, especialidad, condicion_medica, contacto_emergencia) VALUES 
+('a0000000-0000-0000-0000-000000000001', 'Coordinación', 'Admin', 'admin@demo.com', 'administrador', NULL, NULL, NULL, NULL, NULL),
+('b0000000-0000-0000-0000-000000000002', 'Fernanda', 'Pánico', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Pole Dance y Exotic', NULL, NULL),
+('b0000000-0000-0000-0000-000000000003', 'Valentina', 'Flex', 'profe2@demo.com', 'profesor', '33333333-3', '+56933334444', 'Flexibilidad', NULL, NULL),
+('b0000000-0000-0000-0000-000000000004', 'Camila', 'Pole', 'profe3@demo.com', 'profesor', '44444444-4', '+56944445555', 'Pole Dance Básico', NULL, NULL),
+('c0000000-0000-0000-0000-000000000003', 'María', 'Estudiante', 'alumno@demo.com', 'alumno', '22222222-2', '+56988887777', NULL, 'Alergia a penicilina', 'Mamá: +569 9999 8888')
 ON CONFLICT (id) DO UPDATE SET 
 name = EXCLUDED.name, 
 last_name = EXCLUDED.last_name, 
 rut = EXCLUDED.rut, 
 phone = EXCLUDED.phone, 
 especialidad = EXCLUDED.especialidad, 
-condicion_medica = EXCLUDED.condicion_medica;
+condicion_medica = EXCLUDED.condicion_medica,
+contacto_emergencia = EXCLUDED.contacto_emergencia;
 
 -- ==========================================
 -- 3. CREACIÓN DE SALAS Y DISCIPLINAS

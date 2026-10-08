@@ -383,17 +383,19 @@ export default function AdminAlumnosPage() {
                         {alumno.phone || "No proporcionado"}
                       </div>
                       
-                      {/* Medical & Emergency info */}
+                      <div className="flex items-center gap-2 text-error">
+                        <span className="material-symbols-outlined text-[18px]">emergency_home</span>
+                        {alumno.contacto_emergencia ? <span className="font-medium">{alumno.contacto_emergencia}</span> : "Sin contacto de emergencia"}
+                      </div>
+                      
+                      {/* Medical info */}
                       <div className="flex items-start gap-2 mt-2 bg-surface-container-lowest p-2 rounded-lg border border-surface-container">
                         <span className="material-symbols-outlined text-[18px] text-error mt-0.5">medical_services</span>
-                        <div className="flex flex-col flex-1">
-                          {alumno.contacto_emergencia && (
-                            <span className="font-label-sm"><strong className="text-on-surface">Emergencia:</strong> {alumno.contacto_emergencia}</span>
-                          )}
+                        <div className="flex flex-col flex-1 justify-center">
                           {alumno.condicion_medica ? (
-                            <span className="font-body-xs italic line-clamp-2" title={alumno.condicion_medica}>{alumno.condicion_medica}</span>
+                            <span className="font-body-xs italic line-clamp-2 text-on-surface" title={alumno.condicion_medica}>{alumno.condicion_medica}</span>
                           ) : (
-                            <span className="font-body-xs italic text-secondary">Sin ficha médica registrada</span>
+                            <span className="font-body-xs italic text-secondary">Sin condiciones o alergias registradas</span>
                           )}
                         </div>
                         <button 
