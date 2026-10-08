@@ -47,34 +47,34 @@ UPDATE public.profiles SET name = 'María', last_name = 'Estudiante', rut = '222
 -- 3. CREACIÓN DE SALAS Y DISCIPLINAS
 -- ==========================================
 INSERT INTO public.salas (id, nombre) VALUES 
-('s1000000-0000-0000-0000-000000000001', 'Sala A (Principal)'),
-('s2000000-0000-0000-0000-000000000002', 'Sala B (Espejos)');
+('11111111-0000-0000-0000-000000000001', 'Sala A (Principal)'),
+('11111111-0000-0000-0000-000000000002', 'Sala B (Espejos)');
 
 INSERT INTO public.tipos_clase (id, nombre, icono) VALUES 
-('t1000000-0000-0000-0000-000000000001', 'Zumba', 'directions_run'),
-('t2000000-0000-0000-0000-000000000002', 'Pilates', 'self_improvement');
+('22222222-0000-0000-0000-000000000001', 'Zumba', 'directions_run'),
+('22222222-0000-0000-0000-000000000002', 'Pilates', 'self_improvement');
 
 -- ==========================================
 -- 4. CREACIÓN DE PLANES
 -- ==========================================
 INSERT INTO public.planes (id_plan, nombre_plan, descripcion, precio, creditos_clases, duracion_dias, disciplinas_incluidas, ventas) VALUES
-('pl100000-0000-0000-0000-000000000001', 'Plan Básico', '4 Clases al mes', 25000, 4, 30, 'Zumba, Pilates', 1),
-('pl200000-0000-0000-0000-000000000002', 'Plan Ilimitado', 'Clases ilimitadas mensuales', 45000, 999, 30, 'Todas', 0);
+('33333333-0000-0000-0000-000000000001', 'Plan Básico', '4 Clases al mes', 25000, 4, 30, 'Zumba, Pilates', 1),
+('33333333-0000-0000-0000-000000000002', 'Plan Ilimitado', 'Clases ilimitadas mensuales', 45000, 999, 30, 'Todas', 0);
 
 -- Asignar suscripción al alumno de prueba
 INSERT INTO public.user_suscripciones (id, user_id, plan_id, creditos_restantes, fecha_inicio, fecha_fin, estado) VALUES
-('sus00000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 'pl100000-0000-0000-0000-000000000001', 4, now(), now() + interval '30 days', 'activa');
+('44444444-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', '33333333-0000-0000-0000-000000000001', 4, now(), now() + interval '30 days', 'activa');
 
 -- Generar un pago aprobado para esa suscripción
 INSERT INTO public.user_pagos (suscripcion_id, user_id, monto, metodo_pago, estado) VALUES
-('sus00000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 25000, 'transferencia', 'aprobado');
+('44444444-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 25000, 'transferencia', 'aprobado');
 
 -- ==========================================
 -- 5. CREACIÓN DE CLASES (PLANTILLAS Y HORARIOS)
 -- ==========================================
 -- Insertar plantilla (todos los lunes a las 10:00 AM)
 INSERT INTO public.plantillas_clase (id_plantilla, dia_semana, hora_inicio, hora_fin, nombre_clase, id_profesor, sala, cupo_maximo) VALUES
-('ptl00000-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Zumba Energy', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8);
+('55555555-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Zumba Energy', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8);
 
 -- Insertar una clase real para mañana
 INSERT INTO public.clase (id_clase, id_profesor, nombre_clase, cupo_maximo, cupos_inscritos, fecha_hora_inicio, fecha_hora_fin, estado_clase, sala, descripcion) VALUES
