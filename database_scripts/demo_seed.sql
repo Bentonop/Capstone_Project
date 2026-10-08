@@ -41,7 +41,7 @@ VALUES
 -- Si el trigger no creó los perfiles (o lo borramos), los creamos a mano con UPSERT
 INSERT INTO public.profiles (id, name, last_name, correo, role, rut, phone, especialidad, condicion_medica) VALUES 
 ('a0000000-0000-0000-0000-000000000001', 'Coordinación', 'Admin', 'admin@demo.com', 'administrador', NULL, NULL, NULL, NULL),
-('b0000000-0000-0000-0000-000000000002', 'Sebastián', 'Docente', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Zumba y Pilates', NULL),
+('b0000000-0000-0000-0000-000000000002', 'Fernanda', 'Pánico', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Pole Dance y Exotic', NULL),
 ('c0000000-0000-0000-0000-000000000003', 'María', 'Estudiante', 'alumno@demo.com', 'alumno', '22222222-2', '+56988887777', NULL, 'Alergia a penicilina')
 ON CONFLICT (id) DO UPDATE SET 
 name = EXCLUDED.name, 
@@ -59,15 +59,17 @@ INSERT INTO public.salas (id, nombre) VALUES
 ('11111111-0000-0000-0000-000000000002', 'Sala B (Espejos)');
 
 INSERT INTO public.tipos_clase (id, nombre, icono) VALUES 
-('22222222-0000-0000-0000-000000000001', 'Zumba', 'directions_run'),
-('22222222-0000-0000-0000-000000000002', 'Pilates', 'self_improvement');
+('22222222-0000-0000-0000-000000000001', 'Pole Dance', 'accessibility_new'),
+('22222222-0000-0000-0000-000000000002', 'Pole Exotic', 'star'),
+('22222222-0000-0000-0000-000000000003', 'Flex', 'self_improvement');
 
 -- ==========================================
 -- 4. CREACIÓN DE PLANES
 -- ==========================================
 INSERT INTO public.planes (id_plan, nombre_plan, descripcion, precio, creditos_clases, duracion_dias, disciplinas_incluidas, ventas) VALUES
-('33333333-0000-0000-0000-000000000001', 'Plan Básico', '4 Clases al mes', 25000, 4, 30, 'Zumba, Pilates', 1),
-('33333333-0000-0000-0000-000000000002', 'Plan Ilimitado', 'Clases ilimitadas mensuales', 45000, 999, 30, 'Todas', 0);
+('33333333-0000-0000-0000-000000000001', 'Plan 1 Clase Semanal', '4 Clases al mes', 35000, 4, 30, 'Todas', 1),
+('33333333-0000-0000-0000-000000000002', 'Plan 2 Clases Semanales', '8 Clases al mes', 65000, 8, 30, 'Todas', 0),
+('33333333-0000-0000-0000-000000000003', 'Plan Libre', 'Clases ilimitadas mensuales', 80000, 999, 30, 'Todas', 0);
 
 -- Asignar suscripción al alumno de prueba
 INSERT INTO public.user_suscripciones (id, user_id, plan_id, creditos_restantes, fecha_inicio, fecha_fin, estado) VALUES
@@ -75,24 +77,24 @@ INSERT INTO public.user_suscripciones (id, user_id, plan_id, creditos_restantes,
 
 -- Generar un pago aprobado para esa suscripción
 INSERT INTO public.user_pagos (suscripcion_id, user_id, monto, metodo_pago, estado) VALUES
-('44444444-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 25000, 'transferencia', 'aprobado');
+('44444444-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000003', 35000, 'transferencia', 'aprobado');
 
 -- ==========================================
 -- 5. CREACIÓN DE CLASES (PLANTILLAS Y HORARIOS)
 -- ==========================================
 -- Insertar plantilla (todos los lunes a las 10:00 AM)
 INSERT INTO public.plantillas_clase (id_plantilla, dia_semana, hora_inicio, hora_fin, nombre_clase, id_profesor, sala, cupo_maximo) VALUES
-('55555555-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Zumba Energy', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8);
+('55555555-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Pole Exotic Coreografía', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8);
 
 -- Insertar una clase real para mañana
 INSERT INTO public.clase (id_clase, id_profesor, nombre_clase, cupo_maximo, cupos_inscritos, fecha_hora_inicio, fecha_hora_fin, estado_clase, sala, descripcion) VALUES
-(1, 'b0000000-0000-0000-0000-000000000002', 'Zumba Energy', 8, 1, CURRENT_DATE + interval '1 day' + interval '10 hours', CURRENT_DATE + interval '1 day' + interval '11 hours', 'programada', 'Sala A (Principal)', 'Clase de alta intensidad para quemar calorías.');
+(1, 'b0000000-0000-0000-0000-000000000002', 'Pole Exotic Coreografía', 8, 1, CURRENT_DATE + interval '1 day' + interval '10 hours', CURRENT_DATE + interval '1 day' + interval '11 hours', 'programada', 'Sala A (Principal)', 'Clase de Pole Exotic, recuerda llevar tus rodilleras y tacones. ¡Multinivel!');
 
 -- Reservar al alumno en la clase de mañana
 INSERT INTO public.reserva (id_usuario, id_clase, fecha_operacion, estado_reserva) VALUES
 ('c0000000-0000-0000-0000-000000000003', 1, now(), 'confirmada');
 
 -- Descontar 1 crédito por la reserva
-UPDATE public.user_suscripciones SET creditos_restantes = 3 WHERE id = 'sus00000-0000-0000-0000-000000000001';
+UPDATE public.user_suscripciones SET creditos_restantes = 3 WHERE id = '44444444-0000-0000-0000-000000000001';
 
 -- Fin del script! Todo listo para la demo.
