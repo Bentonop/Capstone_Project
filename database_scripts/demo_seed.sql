@@ -24,19 +24,19 @@ DELETE FROM public.roles_whitelist;
 -- ==========================================
 -- 2. CREACIÓN DE USUARIOS DEMO
 -- ==========================================
--- Primero agregamos a la whitelist para que el trigger los deje pasar
-INSERT INTO public.roles_whitelist (correo, rol_asignado) VALUES 
-('admin@demo.com', 'administrador'),
-('profesor@demo.com', 'profesor'),
-('alumno@demo.com', 'alumno');
+-- Primero agregamos a la whitelist para que el trigger los deje pasar y le asignamos un código
+INSERT INTO public.roles_whitelist (correo, rol_asignado, codigo_invitacion) VALUES 
+('admin@demo.com', 'administrador', '111111'),
+('profesor@demo.com', 'profesor', '222222'),
+('alumno@demo.com', 'alumno', '333333');
 
 -- Insertamos en auth.users (la contraseña para todos será: 123456)
 -- El trigger on_auth_user_created se encargará de crear sus registros en "profiles" automáticamente.
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 VALUES
-('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now()),
-('b0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profesor@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now()),
-('c0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumno@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{}', now(), now());
+('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"111111"}', now(), now()),
+('b0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profesor@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"222222"}', now(), now()),
+('c0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumno@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"333333"}', now(), now());
 
 -- Actualizamos los perfiles (que fueron creados por el trigger) con nombres reales
 UPDATE public.profiles SET name = 'Coordinación', last_name = 'Admin' WHERE id = 'a0000000-0000-0000-0000-000000000001';
