@@ -90,9 +90,35 @@ export default function AdminAlumnosPage() {
     e.preventDefault();
     if (!supabase || !inviteEmail.trim()) return;
     
+    const emailLower = inviteEmail.trim().toLowerCase();
+
+    // Check if it's already in the whitelist
+    const { data: existingInvite } = await supabase
+      .from("roles_whitelist")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingInvite) {
+      alert("Error: Este correo ya tiene una invitación pendiente.");
+      return;
+    }
+
+    // Check if it's already an active account in profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingProfile) {
+      alert("Error: Este correo ya tiene una cuenta registrada en la plataforma.");
+      return;
+    }
+
     // Generate a random 6-digit code
     const codigoInvitacion = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     const { error } = await supabase.from("roles_whitelist").insert([{ 
       correo: inviteEmail.trim().toLowerCase(), 
       rol_asignado: "alumno",
@@ -180,6 +206,20 @@ export default function AdminAlumnosPage() {
       fetchAlumnos(); // refresh
     } catch (error) {
       console.error("Error toggling status", error);
+    }
+  };
+
+  const handleDeleteAlumno = async (id: string, name: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar la cuenta del alumno ${name}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ role: "eliminado" }).eq("id", id);
+      if (error) throw error;
+      showToast("Cuenta eliminada con éxito.");
+      fetchAlumnos();
+    } catch (error) {
+      console.error("Error eliminando alumno", error);
+      alert("Error al eliminar la cuenta del alumno.");
     }
   };
 
@@ -378,6 +418,13 @@ export default function AdminAlumnosPage() {
                       <button className="flex-1 h-10 rounded-lg bg-primary text-on-primary font-label-sm font-bold flex items-center justify-center gap-1">
                         <span className="material-symbols-outlined text-[18px]">add_circle</span>
                         Plan
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteAlumno(alumno.id, alumno.name)} 
+                        className="w-10 h-10 shrink-0 rounded-lg bg-error/10 text-error flex items-center justify-center transition-colors hover:bg-error/20" 
+                        title="Eliminar Alumno"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </div>
                   </article>

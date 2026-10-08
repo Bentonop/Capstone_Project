@@ -107,9 +107,35 @@ export default function AdminGestionPage() {
     e.preventDefault();
     if (!supabase || !inviteEmail.trim()) return;
     
+    const emailLower = inviteEmail.trim().toLowerCase();
+
+    // 1. Check if it's already in the whitelist
+    const { data: existingInvite } = await supabase
+      .from("roles_whitelist")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingInvite) {
+      alert("Error: Este correo ya tiene una invitación pendiente.");
+      return;
+    }
+
+    // 2. Check if the user is already registered in profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingProfile) {
+      alert("Error: Este correo ya tiene una cuenta registrada en la plataforma.");
+      return;
+    }
+      
     // Generate a random 6-digit code
     const codigoInvitacion = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     const { error } = await supabase.from("roles_whitelist").insert([{ 
       correo: inviteEmail.trim().toLowerCase(), 
       rol_asignado: "profesor",
@@ -153,10 +179,10 @@ export default function AdminGestionPage() {
 
   const handleDemote = async () => {
     if (!supabase || !selectedProf) return;
-    if (!window.confirm(`¿Quitarle el cargo de profesor a ${selectedProf.name}?`)) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar la cuenta de profesor de ${selectedProf.name}? Esta acción no se puede deshacer.`)) return;
     const { error } = await supabase.from("profiles").update({ role: "alumno" }).eq("id", selectedProf.id);
     if (!error) {
-      showToast("Cargo removido con éxito.");
+      showToast("Cuenta eliminada con éxito.");
       setSelectedProf(null);
       fetchProfesores();
     }
@@ -179,10 +205,13 @@ export default function AdminGestionPage() {
     }
   };
 
-  const toggleStatus = async (id: string, currentStatus: boolean, e: any) => {
-    e.stopPropagation();
+  const toggleStatus = async (id: string, currentStatus: boolean, e?: any) => {
+    if (e) e.stopPropagation();
     if (!supabase) return;
     await supabase.from("profiles").update({ active: !currentStatus }).eq("id", id);
+    if (selectedProf && selectedProf.id === id) {
+      setSelectedProf({ ...selectedProf, active: !currentStatus });
+    }
     fetchProfesores();
   };
 
@@ -676,7 +705,21 @@ export default function AdminGestionPage() {
               </select>
 
               <button onClick={handleSaveEdit} className="w-full h-12 bg-primary text-on-primary font-bold rounded-xl mt-2">Guardar Cambios</button>
-              <button onClick={handleDemote} className="w-full h-12 bg-error/10 text-error font-bold rounded-xl border border-error/20">Quitar Cargo de Profesor</button>
+              
+              <div className="flex gap-3 mt-2">
+                <button 
+                  onClick={() => toggleStatus(selectedProf.id, selectedProf.active)} 
+                  className={`flex-1 h-12 font-bold rounded-xl border ${selectedProf.active ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-green-50 text-green-600 border-green-200'}`}
+                >
+                  {selectedProf.active ? "Pausar Cuenta" : "Reactivar Cuenta"}
+                </button>
+                <button 
+                  onClick={handleDemote} 
+                  className="flex-1 h-12 bg-error/10 text-error font-bold rounded-xl border border-error/20"
+                >
+                  Eliminar Cuenta
+                </button>
+              </div>
             </div>
           </div>
         </div>
