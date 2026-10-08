@@ -15,11 +15,9 @@ DELETE FROM public.planes;
 DELETE FROM public.tipos_clase;
 DELETE FROM public.salas;
 
--- Desactivar el trigger temporalmente para poder borrar usuarios sin problemas
-ALTER TABLE auth.users DISABLE TRIGGER ALL;
+-- Borramos los perfiles y luego los usuarios de autenticación
 DELETE FROM public.profiles;
 DELETE FROM auth.users;
-ALTER TABLE auth.users ENABLE TRIGGER ALL;
 
 DELETE FROM public.roles_whitelist;
 
