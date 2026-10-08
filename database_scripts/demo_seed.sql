@@ -28,6 +28,8 @@ DELETE FROM public.roles_whitelist;
 INSERT INTO public.roles_whitelist (correo, rol_asignado, codigo_invitacion) VALUES 
 ('admin@demo.com', 'administrador', '111111'),
 ('profesor@demo.com', 'profesor', '222222'),
+('profe2@demo.com', 'profesor', '222223'),
+('profe3@demo.com', 'profesor', '222224'),
 ('alumno@demo.com', 'alumno', '333333');
 
 -- Insertamos en auth.users (la contraseña para todos será: 123456)
@@ -36,12 +38,16 @@ INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, e
 VALUES
 ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"111111"}', now(), now()),
 ('b0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profesor@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"222222"}', now(), now()),
+('b0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profe2@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"222223"}', now(), now()),
+('b0000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profe3@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"222224"}', now(), now()),
 ('c0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumno@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"333333"}', now(), now());
 
 -- Si el trigger no creó los perfiles (o lo borramos), los creamos a mano con UPSERT
 INSERT INTO public.profiles (id, name, last_name, correo, role, rut, phone, especialidad, condicion_medica) VALUES 
 ('a0000000-0000-0000-0000-000000000001', 'Coordinación', 'Admin', 'admin@demo.com', 'administrador', NULL, NULL, NULL, NULL),
 ('b0000000-0000-0000-0000-000000000002', 'Fernanda', 'Pánico', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Pole Dance y Exotic', NULL),
+('b0000000-0000-0000-0000-000000000003', 'Valentina', 'Flex', 'profe2@demo.com', 'profesor', '33333333-3', '+56933334444', 'Flexibilidad', NULL),
+('b0000000-0000-0000-0000-000000000004', 'Camila', 'Pole', 'profe3@demo.com', 'profesor', '44444444-4', '+56944445555', 'Pole Dance Básico', NULL),
 ('c0000000-0000-0000-0000-000000000003', 'María', 'Estudiante', 'alumno@demo.com', 'alumno', '22222222-2', '+56988887777', NULL, 'Alergia a penicilina')
 ON CONFLICT (id) DO UPDATE SET 
 name = EXCLUDED.name, 
@@ -82,13 +88,18 @@ INSERT INTO public.user_pagos (suscripcion_id, user_id, monto, metodo_pago, esta
 -- ==========================================
 -- 5. CREACIÓN DE CLASES (PLANTILLAS Y HORARIOS)
 -- ==========================================
--- Insertar plantilla (todos los lunes a las 10:00 AM)
+-- Insertar plantillas (todos los lunes)
 INSERT INTO public.plantillas_clase (id_plantilla, dia_semana, hora_inicio, hora_fin, nombre_clase, id_profesor, sala, cupo_maximo) VALUES
-('55555555-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Pole Exotic Coreografía', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8);
+('55555555-0000-0000-0000-000000000001', 1, '10:00:00', '11:00:00', 'Pole Exotic Coreografía', 'b0000000-0000-0000-0000-000000000002', 'Sala A (Principal)', 8),
+('55555555-0000-0000-0000-000000000002', 1, '18:00:00', '19:00:00', 'Flexibilidad Activa', 'b0000000-0000-0000-0000-000000000003', 'Sala B (Espejos)', 10),
+('55555555-0000-0000-0000-000000000003', 1, '19:30:00', '20:30:00', 'Pole Dance Básico', 'b0000000-0000-0000-0000-000000000004', 'Sala A (Principal)', 8);
 
--- Insertar una clase real para mañana
+-- Insertar clases reales para mañana y pasado mañana
 INSERT INTO public.clase (id_clase, id_profesor, nombre_clase, cupo_maximo, cupos_inscritos, fecha_hora_inicio, fecha_hora_fin, estado_clase, sala, descripcion) VALUES
-(1, 'b0000000-0000-0000-0000-000000000002', 'Pole Exotic Coreografía', 8, 1, CURRENT_DATE + interval '1 day' + interval '10 hours', CURRENT_DATE + interval '1 day' + interval '11 hours', 'programada', 'Sala A (Principal)', 'Clase de Pole Exotic, recuerda llevar tus rodilleras y tacones. ¡Multinivel!');
+(1, 'b0000000-0000-0000-0000-000000000002', 'Pole Exotic Coreografía', 8, 1, CURRENT_DATE + interval '1 day' + interval '10 hours', CURRENT_DATE + interval '1 day' + interval '11 hours', 'programada', 'Sala A (Principal)', 'Clase de Pole Exotic, recuerda llevar tus rodilleras y tacones. ¡Multinivel!'),
+(2, 'b0000000-0000-0000-0000-000000000003', 'Flexibilidad Activa', 10, 0, CURRENT_DATE + interval '1 day' + interval '18 hours', CURRENT_DATE + interval '1 day' + interval '19 hours', 'programada', 'Sala B (Espejos)', 'Aumenta tu rango de movimiento con ejercicios activos.'),
+(3, 'b0000000-0000-0000-0000-000000000004', 'Pole Dance Básico', 8, 0, CURRENT_DATE + interval '1 day' + interval '19 hours 30 minutes', CURRENT_DATE + interval '1 day' + interval '20 hours 30 minutes', 'programada', 'Sala A (Principal)', 'Aprende los fundamentos del Pole Dance desde cero.'),
+(4, 'b0000000-0000-0000-0000-000000000002', 'Pole Exotic Coreografía', 8, 0, CURRENT_DATE + interval '2 days' + interval '10 hours', CURRENT_DATE + interval '2 days' + interval '11 hours', 'programada', 'Sala A (Principal)', 'Nueva coreografía semanal de Pole Exotic.');
 
 -- Reservar al alumno en la clase de mañana
 INSERT INTO public.reserva (id_usuario, id_clase, fecha_operacion, estado_reserva) VALUES
