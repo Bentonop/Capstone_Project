@@ -71,6 +71,19 @@ export default function AlumnoPerfilPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("¿Estás segura de que quieres eliminar tu cuenta permanentemente? Perderás todos tus planes y reservas.")) {
+      alert("Tu cuenta ha sido eliminada del sistema.");
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    }
+  };
+
   return (
     <div className="flex flex-col w-full pb-bottom-nav-safe">
       <div className="flex items-center px-margin-mobile pt-space-md pb-space-sm gap-3">
@@ -224,7 +237,17 @@ export default function AlumnoPerfilPage() {
               <span className="material-symbols-outlined text-[20px]">settings</span>
               Configuración de la cuenta
             </button>
-            <button className="w-full h-12 rounded-xl border border-error text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/10 transition-colors">
+            <button 
+              onClick={handleDeleteAccount}
+              className="w-full h-12 rounded-xl bg-error/10 text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/20 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">delete_forever</span>
+              Borrar Cuenta
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="w-full h-12 rounded-xl border border-error text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/10 transition-colors"
+            >
               <span className="material-symbols-outlined text-[20px]">logout</span>
               Cerrar Sesión
             </button>
