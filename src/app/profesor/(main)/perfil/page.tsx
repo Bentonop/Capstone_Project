@@ -80,6 +80,19 @@ export default function PerfilProfesorPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("¿Estás segura de que quieres eliminar tu cuenta permanentemente? Perderás todas tus clases y alumnos asignados.")) {
+      alert("Tu cuenta ha sido eliminada del sistema.");
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -259,6 +272,27 @@ export default function PerfilProfesorPage() {
                  })}
                </div>
              )}
+          </div>
+
+          <div className="pt-4 pb-8 flex flex-col gap-3">
+            <button className="w-full h-12 rounded-xl bg-surface-container-high text-on-surface font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-colors">
+              <span className="material-symbols-outlined text-[20px]">settings</span>
+              Configuración de la cuenta
+            </button>
+            <button 
+              onClick={handleDeleteAccount}
+              className="w-full h-12 rounded-xl bg-error/10 text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/20 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">delete_forever</span>
+              Borrar Cuenta
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="w-full h-12 rounded-xl border border-error text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+              Cerrar Sesión
+            </button>
           </div>
 
         </div>
