@@ -38,10 +38,18 @@ VALUES
 ('b0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'profesor@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"222222"}', now(), now()),
 ('c0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alumno@demo.com', crypt('123456', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"invite_code":"333333"}', now(), now());
 
--- Actualizamos los perfiles (que fueron creados por el trigger) con nombres reales
-UPDATE public.profiles SET name = 'Coordinación', last_name = 'Admin' WHERE id = 'a0000000-0000-0000-0000-000000000001';
-UPDATE public.profiles SET name = 'Sebastián', last_name = 'Docente', rut = '11111111-1', phone = '+56911112222', especialidad = 'Zumba y Pilates' WHERE id = 'b0000000-0000-0000-0000-000000000002';
-UPDATE public.profiles SET name = 'María', last_name = 'Estudiante', rut = '22222222-2', phone = '+56988887777', condicion_medica = 'Alergia a penicilina' WHERE id = 'c0000000-0000-0000-0000-000000000003';
+-- Si el trigger no creó los perfiles (o lo borramos), los creamos a mano con UPSERT
+INSERT INTO public.profiles (id, name, last_name, correo, role, rut, phone, especialidad, condicion_medica) VALUES 
+('a0000000-0000-0000-0000-000000000001', 'Coordinación', 'Admin', 'admin@demo.com', 'administrador', NULL, NULL, NULL, NULL),
+('b0000000-0000-0000-0000-000000000002', 'Sebastián', 'Docente', 'profesor@demo.com', 'profesor', '11111111-1', '+56911112222', 'Zumba y Pilates', NULL),
+('c0000000-0000-0000-0000-000000000003', 'María', 'Estudiante', 'alumno@demo.com', 'alumno', '22222222-2', '+56988887777', NULL, 'Alergia a penicilina')
+ON CONFLICT (id) DO UPDATE SET 
+name = EXCLUDED.name, 
+last_name = EXCLUDED.last_name, 
+rut = EXCLUDED.rut, 
+phone = EXCLUDED.phone, 
+especialidad = EXCLUDED.especialidad, 
+condicion_medica = EXCLUDED.condicion_medica;
 
 -- ==========================================
 -- 3. CREACIÓN DE SALAS Y DISCIPLINAS
