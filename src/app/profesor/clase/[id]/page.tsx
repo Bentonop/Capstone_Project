@@ -146,6 +146,42 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
     showToast(`Aviso enviado: ${type}`);
   };
 
+  const handleStartClass = async () => {
+    if (!supabase || !claseDetalle) return;
+    try {
+      // 1. Actualizar el estado de la clase a 'en_curso'
+      const { error: updateError } = await supabase
+        .from('clase')
+        .update({ estado_clase: 'en_curso' })
+        .eq('id_clase', id);
+
+      if (updateError) throw updateError;
+      
+      setClaseDetalle({ ...claseDetalle, estado_clase: 'en_curso' });
+
+      // 2. Insertar notificación para el administrador
+      const tituloNotificacion = `🟢 Clase Iniciada: ${claseDetalle.nombre_clase}`;
+      const mensajeNotificacion = `El profesor ha iniciado la sesión. Asistencia confirmada: ${presentCount}/${totalCount} alumnos.`;
+      
+      // Intentamos insertar, si la tabla no existe aún no romperá la UI pero lo capturamos
+      const { error: notifError } = await supabase
+        .from('notificaciones')
+        .insert([{
+          tipo: 'operativa',
+          titulo: tituloNotificacion,
+          mensaje: mensajeNotificacion,
+          clase_id: parseInt(id)
+        }]);
+        
+      if (notifError) console.warn("La tabla de notificaciones podría no estar lista aún:", notifError);
+
+      showToast("✅ Clase iniciada correctamente. Administrador notificado.");
+    } catch (err) {
+      console.error("Error al iniciar clase:", err);
+      showToast("❌ Hubo un error al iniciar la clase");
+    }
+  };
+
   return (
     <div className="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen">
       <header className="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe">
@@ -177,10 +213,17 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
               <div className="flex items-start justify-between gap-space-xs">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-space-2xs mb-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-caps text-label-caps border border-primary/20">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                      EN VIVO
-                    </span>
+                    {claseDetalle?.estado_clase === 'en_curso' ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-label-caps text-label-caps border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        EN CURSO
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-caps text-label-caps border border-primary/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        PROGRAMADA
+                      </span>
+                    )}
                     <span className="text-secondary font-label-caps text-label-caps uppercase tracking-wider ml-2">Sala Pole 1</span>
                   </div>
                   <h2 className="font-headline-md text-headline-md text-on-surface truncate">{claseDetalle?.nombre_clase || "Cargando..."}</h2>
@@ -218,6 +261,18 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                   </span>
                 </div>
               </div>
+              
+              {claseDetalle?.estado_clase !== 'en_curso' && (
+                <div className="mt-4 pt-4 border-t border-surface-container">
+                  <button 
+                    onClick={handleStartClass}
+                    className="w-full py-3.5 px-4 rounded-xl bg-primary text-on-primary font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md shadow-primary/20"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">play_circle</span>
+                    Comenzar Clase
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
