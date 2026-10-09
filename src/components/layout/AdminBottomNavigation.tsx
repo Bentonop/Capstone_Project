@@ -30,12 +30,6 @@ export function AdminBottomNavigation() {
       icon: "group",
       label: "Alumnos",
       match: "/admin/alumnos"
-    },
-    {
-      href: "/admin/ajustes",
-      icon: "settings",
-      label: "Config",
-      match: "/admin/ajustes"
     }
   ];
 
