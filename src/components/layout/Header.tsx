@@ -177,6 +177,17 @@ export default function Header({ title = "Cuerpo y Alma", subtitle = "Inicio", p
                 ))
               )}
             </div>
+            
+            <div className="p-3 border-t border-surface-container bg-surface-container-lowest">
+              <Link 
+                href="/admin/notificaciones" 
+                onClick={() => setIsOpen(false)}
+                className="w-full h-10 bg-primary/10 text-primary font-label-md font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">history</span>
+                Ver todo el historial
+              </Link>
+            </div>
           </div>
         </div>
       )}
