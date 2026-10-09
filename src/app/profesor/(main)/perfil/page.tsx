@@ -288,7 +288,7 @@ export default function PerfilProfesorPage() {
             </button>
             <button 
               onClick={handleLogout}
-              className="w-full h-12 rounded-xl border border-error text-error font-label-lg font-bold flex items-center justify-center gap-2 hover:bg-error/10 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-error/10 text-error hover:bg-error/20 active:scale-[0.98] transition-all font-label-lg font-bold"
             >
               <span className="material-symbols-outlined text-[20px]">logout</span>
               Cerrar Sesión
