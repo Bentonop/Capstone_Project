@@ -3,12 +3,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function MisClasesPage() {
   const [activeTab, setActiveTab] = useState("hoy");
   const [reservas, setReservas] = useState<any[]>([]);
   const [credits, setCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Nuevo estado para el modal del Pase QR
+  const [selectedReserva, setSelectedReserva] = useState<any | null>(null);
 
   useEffect(() => {
     async function fetchMyClasses() {
@@ -71,12 +75,8 @@ export default function MisClasesPage() {
   if (activeTab === "hoy") displayedReservas = hoy;
   if (activeTab === "futuras") displayedReservas = futuras;
 
-  // We should default to 'hoy' if we want, but 'proximas' was the old default. Let's start with 'hoy' if it's the first time, but we initialized state to 'proximas' which is no longer valid.
-  // Wait, I will just handle it in the UI and also update the useState to default to 'hoy'.
-
   return (
     <div className="flex flex-col w-full pb-bottom-nav-safe">
-
 
       {/* Main Content */}
       <div className="flex flex-col px-margin-mobile gap-space-lg pt-space-sm">
@@ -136,7 +136,6 @@ export default function MisClasesPage() {
           </div>
         </section>
 
-        {/* Classes List */}
         {/* Classes List */}
         <div className="flex flex-col gap-space-md pb-space-xl">
           {isLoading ? (
@@ -205,7 +204,10 @@ export default function MisClasesPage() {
                 {(isToday || activeTab === 'futuras') && (
                   <div className="flex gap-2 p-space-md pt-0">
                     {isToday ? (
-                      <button className="flex-1 h-14 bg-primary text-on-primary rounded-xl font-label-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-sm">
+                      <button 
+                        onClick={() => setSelectedReserva(cls)}
+                        className="flex-1 h-14 bg-primary text-on-primary rounded-xl font-label-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-sm"
+                      >
                         <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
                         Check-in QR
                       </button>
@@ -226,6 +228,43 @@ export default function MisClasesPage() {
           })}
         </div>
       </div>
+
+      {/* Modal Pase de Entrada QR */}
+      {selectedReserva && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-lowest p-6 rounded-3xl max-w-sm w-full text-center shadow-2xl border border-surface-container flex flex-col items-center">
+            
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
+              <span className="material-symbols-outlined text-[24px]">qr_code_2</span>
+            </div>
+
+            <h2 className="font-headline-sm text-[20px] text-on-surface font-bold">Pase de Ingreso</h2>
+            <p className="font-body-sm text-[13px] text-on-surface-variant mb-5 mt-1">
+              Muestra este código al profesor para confirmar tu asistencia a <strong className="text-on-surface">{selectedReserva.clase.nombre_clase}</strong>.
+            </p>
+
+            <div className="p-4 bg-white rounded-2xl border border-surface-container shadow-inner flex justify-center items-center">
+              <QRCodeSVG 
+                value={JSON.stringify({
+                  id_reserva: selectedReserva.id_reserva,
+                  id_clase: selectedReserva.clase.id_clase
+                })} 
+                size={210} 
+                level="H" 
+                includeMargin={true} 
+              />
+            </div>
+
+            <button
+              onClick={() => setSelectedReserva(null)}
+              className="mt-6 w-full py-3.5 bg-surface-container-high text-on-surface font-label-lg font-bold rounded-xl hover:bg-surface-container-highest transition-all"
+            >
+              Cerrar Pase
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
