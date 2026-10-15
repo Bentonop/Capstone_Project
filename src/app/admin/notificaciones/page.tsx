@@ -76,7 +76,23 @@ export default function AdminNotificacionesPage() {
         .single();
         
       if (error) throw error;
-      if (data) setClassDetails(data);
+
+      // Consultar las reservas reales para calcular la asistencia
+      const { data: reservas } = await supabase
+        .from('reserva')
+        .select('id_reserva, estado_reserva')
+        .eq('id_clase', claseId);
+
+      const totalPresentes = reservas ? reservas.filter((r: any) => r.estado_reserva === 'presente').length : 0;
+      const totalInscritos = reservas ? reservas.filter((r: any) => r.estado_reserva !== 'cancelada').length : (data?.cupos_inscritos || 0);
+
+      if (data) {
+        setClassDetails({
+          ...data,
+          totalPresentes,
+          totalInscritos
+        });
+      }
     } catch (err) {
       console.error(err);
       setClassDetails({ error: "No se pudo cargar la clase o ya fue eliminada." });
@@ -235,8 +251,13 @@ export default function AdminNotificacionesPage() {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-[20px] text-secondary">group</span>
-                      <span>Asistencia / Inscritos: <strong className="text-on-surface">{classDetails.cupos_inscritos || 0} / {classDetails.cupo_maximo || 8}</strong></span>
+                      <span className="material-symbols-outlined text-[20px] text-primary">local_activity</span>
+                      <span>Cupos utilizados: <strong className="text-on-surface">{classDetails.totalInscritos ?? classDetails.cupos_inscritos ?? 0} / {classDetails.cupo_maximo || 8}</strong> <span className="text-xs text-secondary font-medium">({Math.max(0, (classDetails.cupo_maximo || 8) - (classDetails.totalInscritos ?? classDetails.cupos_inscritos ?? 0))} libres)</span></span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[20px] text-emerald-600">how_to_reg</span>
+                      <span>Alumnos que asistieron: <strong className="text-emerald-700 font-bold">{classDetails.totalPresentes ?? 0} presentes</strong> <span className="text-xs text-secondary font-medium">(de {classDetails.totalInscritos ?? classDetails.cupos_inscritos ?? 0} inscritos)</span></span>
                     </div>
                   </div>
                 </div>
