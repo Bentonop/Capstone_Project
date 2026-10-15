@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { deleteClassesCascade } from "@/lib/clases";
 
 interface Profile {
   id: string;
@@ -393,6 +394,9 @@ export default function AdminGestionPage() {
     if (!confirmDelete) return;
 
     try {
+      const daysOfWeekMap = { "Dom": 0, "Lun": 1, "Mar": 2, "Mié": 3, "Jue": 4, "Vie": 5, "Sáb": 6 };
+      const targetDayNum = daysOfWeekMap[selectedDay as keyof typeof daysOfWeekMap];
+
       // 1. Eliminar la plantilla fija
       const { error: errTemplate } = await supabase
         .from('plantillas_clase')
@@ -403,24 +407,33 @@ export default function AdminGestionPage() {
 
       // 2. Preguntar si también desea eliminar las clases ya generadas en el calendario
       const deleteFuture = window.confirm(
-        `¿Deseas también eliminar del calendario las clases programadas futuras de "${name}"?`
+        `¿Deseas también eliminar del calendario las clases programadas futuras de "${name}" de los días ${selectedDay}?`
       );
 
       if (deleteFuture) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const { error: errClasses } = await supabase
+        // Buscar todas las sesiones futuras de esta clase
+        const { data: futureClasses } = await supabase
           .from('clase')
-          .delete()
+          .select('id_clase, fecha_hora_inicio')
           .eq('nombre_clase', name)
           .gte('fecha_hora_inicio', formatLocalDateTime(today));
 
-        if (errClasses) {
-          console.error("Error al eliminar clases futuras:", errClasses);
-          showToast(`Horario eliminado, pero hubo un error con las clases futuras.`);
+        if (futureClasses && futureClasses.length > 0) {
+          const matchingIds = futureClasses
+            .filter((c: any) => new Date(c.fecha_hora_inicio).getDay() === targetDayNum)
+            .map((c: any) => c.id_clase);
+
+          if (matchingIds.length > 0) {
+            await deleteClassesCascade(supabase, matchingIds);
+            showToast(`Horario y ${matchingIds.length} sesiones futuras eliminadas.`);
+          } else {
+            showToast(`Horario de "${name}" eliminado.`);
+          }
         } else {
-          showToast(`Clase "${name}" y sesiones futuras eliminadas.`);
+          showToast(`Horario de "${name}" eliminado.`);
         }
       } else {
         showToast(`Horario de "${name}" eliminado.`);
@@ -467,15 +480,15 @@ export default function AdminGestionPage() {
       minute: '2-digit'
     });
 
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la sesión de "${name}" del ${formattedDate}? Todas las reservas asociadas serán canceladas automáticamente.`)) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la sesión de "${name}" del ${formattedDate}? Todas las reservas asociadas serán canceladas automáticamente y se reembolsarán los créditos a los alumnos.`)) return;
 
     try {
-      const { error } = await supabase.from('clase').delete().eq('id_clase', id);
-      if (error) throw error;
+      await deleteClassesCascade(supabase, id);
       showToast(`Sesión de "${name}" eliminada.`);
       fetchRealClasses();
     } catch (err: any) {
-      alert("Error al eliminar la clase: " + err.message);
+      console.error(err);
+      alert("Error al eliminar la clase: " + (err.message || err));
     }
   };
 

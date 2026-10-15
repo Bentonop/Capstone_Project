@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { deleteClassesCascade } from "@/lib/clases";
 
 interface Notificacion {
   id: string;
@@ -103,11 +104,10 @@ export default function AdminNotificacionesPage() {
 
   const handleDeleteClass = async (claseId: number, className: string) => {
     if (!supabase) return;
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la clase "${className}"? Todas las reservas asociadas serán canceladas.`)) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la clase "${className}"? Todas las reservas asociadas serán canceladas y se reembolsarán los créditos a los alumnos.`)) return;
 
     try {
-      const { error } = await supabase.from('clase').delete().eq('id_clase', claseId);
-      if (error) throw error;
+      await deleteClassesCascade(supabase, claseId);
       alert(`Clase "${className}" eliminada con éxito.`);
       setSelectedClassId(null);
       fetchNotificaciones();
