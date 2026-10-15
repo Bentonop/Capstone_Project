@@ -23,6 +23,9 @@ export default function AdminGestionPage() {
   const [selectedDay, setSelectedDay] = useState("Lun");
   const daysFilter = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
   const [scheduleData, setScheduleData] = useState<any[]>([]);
+  const [calendarSubView, setCalendarSubView] = useState<"plantillas" | "sesiones">("plantillas");
+  const [realClasses, setRealClasses] = useState<any[]>([]);
+  const [isLoadingRealClasses, setIsLoadingRealClasses] = useState(false);
   
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
   const [tName, setTName] = useState("");
@@ -319,12 +322,97 @@ export default function AdminGestionPage() {
     }
   };
 
-  const handleDeleteTemplate = async (id: string, e: any) => {
+  const handleDeleteTemplate = async (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!supabase) return;
-    if (!window.confirm("¿Eliminar este bloque fijo de la semana?")) return;
-    await supabase.from('plantillas_clase').delete().eq('id_plantilla', id);
-    fetchPlantillas();
+
+    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar la clase "${name}" de los horarios de los ${selectedDay}?`);
+    if (!confirmDelete) return;
+
+    try {
+      // 1. Eliminar la plantilla fija
+      const { error: errTemplate } = await supabase
+        .from('plantillas_clase')
+        .delete()
+        .eq('id_plantilla', id);
+
+      if (errTemplate) throw errTemplate;
+
+      // 2. Preguntar si también desea eliminar las clases ya generadas en el calendario
+      const deleteFuture = window.confirm(
+        `¿Deseas también eliminar del calendario las clases programadas futuras de "${name}"?`
+      );
+
+      if (deleteFuture) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const { error: errClasses } = await supabase
+          .from('clase')
+          .delete()
+          .eq('nombre_clase', name)
+          .gte('fecha_hora_inicio', today.toISOString());
+
+        if (errClasses) {
+          console.error("Error al eliminar clases futuras:", errClasses);
+          showToast(`Horario eliminado, pero hubo un error con las clases futuras.`);
+        } else {
+          showToast(`Clase "${name}" y sesiones futuras eliminadas.`);
+        }
+      } else {
+        showToast(`Horario de "${name}" eliminado.`);
+      }
+
+      fetchPlantillas();
+    } catch (err: any) {
+      console.error(err);
+      alert("Error al eliminar: " + (err.message || err));
+    }
+  };
+
+  async function fetchRealClasses() {
+    if (!supabase) return;
+    setIsLoadingRealClasses(true);
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('clase')
+        .select('*, profiles:id_profesor(name, last_name)')
+        .gte('fecha_hora_inicio', today.toISOString())
+        .order('fecha_hora_inicio', { ascending: true })
+        .limit(60);
+
+      if (error) throw error;
+      setRealClasses(data || []);
+    } catch (err) {
+      console.error("Error fetching real classes:", err);
+    } finally {
+      setIsLoadingRealClasses(false);
+    }
+  }
+
+  const handleDeleteRealClass = async (id: number, name: string, dateStr: string) => {
+    if (!supabase) return;
+    const formattedDate = new Date(dateStr).toLocaleDateString('es-CL', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la sesión de "${name}" del ${formattedDate}? Todas las reservas asociadas serán canceladas automáticamente.`)) return;
+
+    try {
+      const { error } = await supabase.from('clase').delete().eq('id_clase', id);
+      if (error) throw error;
+      showToast(`Sesión de "${name}" eliminada.`);
+      fetchRealClasses();
+    } catch (err: any) {
+      alert("Error al eliminar la clase: " + err.message);
+    }
   };
 
   const handleGenerateClasses = async () => {
@@ -356,7 +444,7 @@ export default function AdminGestionPage() {
           
       const existingSet = new Set((existingClasses || []).map(c => `${c.nombre_clase}_${c.fecha_hora_inicio}`));
       
-      const inserts = [];
+      const inserts: any[] = [];
       
       for (let i = 0; i < 28; i++) {
          const currentDate = new Date(today);
@@ -517,46 +605,164 @@ export default function AdminGestionPage() {
         </section>
       )}
 
-      {/* CALENDAR (PLANTILLAS) TAB */}
+      {/* CALENDAR (PLANTILLAS Y SESIONES) TAB */}
       {activeTab === "calendar" && (
         <section className="px-gutter-mobile mt-space-md animate-in fade-in">
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-4 pb-2 -mx-gutter-mobile px-gutter-mobile">
-            {daysFilter.map(day => (
-              <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "premium-btn shadow-md" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}>
-                {day}
-              </button>
-            ))}
+          {/* Sub-view switcher: Plantillas Semanales vs Sesiones Reales */}
+          <div className="flex bg-surface-container-low p-1 rounded-xl mb-4 max-w-sm border border-surface-container">
+            <button
+              type="button"
+              onClick={() => setCalendarSubView("plantillas")}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                calendarSubView === "plantillas"
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              Horario Semanal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCalendarSubView("sesiones");
+                fetchRealClasses();
+              }}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                calendarSubView === "sesiones"
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              Sesiones Calendario
+            </button>
           </div>
 
-          <div className="flex flex-col gap-3 pb-6">
-            {scheduleData.length === 0 ? (
-               <div className="text-center bg-surface-container-lowest rounded-2xl border border-surface-container py-10 mt-2">
-                 <span className="material-symbols-outlined text-[40px] text-surface-variant mb-2">calendar_today</span>
-                 <p className="text-on-surface font-bold">Sin bloques fijos</p>
-                 <p className="text-secondary text-sm mt-1">Añade plantillas para el {selectedDay}.</p>
-               </div>
-            ) : (
-              scheduleData.map((slot, idx) => (
-                <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-surface-container overflow-hidden">
-                  <div className="bg-surface-container-low px-4 py-2 border-b border-surface-container font-label-lg font-bold text-on-surface">
-                    {slot.time}
-                  </div>
-                  <div className="p-3 grid grid-cols-2 gap-3">
-                    {slot.items.map((c: any, i: number) => (
-                      <div key={i} className="relative p-3 rounded-xl border border-surface-container-high bg-surface-container flex flex-col justify-center text-center group">
-                        <span className="font-label-caps text-secondary mb-1">{c.sala}</span>
-                        <span className="font-label-md text-on-surface font-bold">{c.name}</span>
-                        <span className="text-[10px] text-on-surface-variant">{c.prof}</span>
-                        <button onClick={(e) => handleDeleteTemplate(c.id, e)} className="absolute -top-2 -right-2 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 shadow-sm transition-opacity">
-                          <span className="material-symbols-outlined text-[14px]">close</span>
+          {calendarSubView === "plantillas" ? (
+            <>
+              <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-4 pb-2 -mx-gutter-mobile px-gutter-mobile">
+                {daysFilter.map(day => (
+                  <button key={day} onClick={() => setSelectedDay(day)} className={`shrink-0 px-4 py-2 rounded-full font-label-md font-bold transition-all ${selectedDay === day ? "premium-btn shadow-md" : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`}>
+                    {day}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-3 pb-6">
+                {scheduleData.length === 0 ? (
+                   <div className="text-center bg-surface-container-lowest rounded-2xl border border-surface-container py-10 mt-2">
+                     <span className="material-symbols-outlined text-[40px] text-surface-variant mb-2">calendar_today</span>
+                     <p className="text-on-surface font-bold">Sin bloques fijos</p>
+                     <p className="text-secondary text-sm mt-1">Añade plantillas para el {selectedDay}.</p>
+                   </div>
+                ) : (
+                  scheduleData.map((slot, idx) => (
+                    <div key={idx} className="bg-surface-container-lowest rounded-2xl border border-surface-container overflow-hidden">
+                      <div className="bg-surface-container-low px-4 py-2 border-b border-surface-container font-label-lg font-bold text-on-surface">
+                        {slot.time}
+                      </div>
+                      <div className="p-3 grid grid-cols-2 gap-3">
+                        {slot.items.map((c: any, i: number) => (
+                          <div key={i} className="relative p-3.5 rounded-xl border border-surface-container-high bg-surface-container flex flex-col justify-between text-left shadow-sm hover:border-secondary/30 transition-all">
+                            <div className="flex items-start justify-between gap-1 mb-1">
+                              <span className="font-label-caps text-secondary text-[11px] leading-tight truncate pr-1">
+                                {c.sala}
+                              </span>
+                              <button 
+                                type="button"
+                                onClick={(e) => handleDeleteTemplate(c.id, c.name, e)} 
+                                title={`Eliminar clase ${c.name}`}
+                                className="w-7 h-7 rounded-full bg-error/10 hover:bg-error/20 active:bg-error text-error active:text-white flex items-center justify-center transition-colors shrink-0 -mt-0.5 -mr-0.5"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </div>
+                            <span className="font-label-md text-on-surface font-bold leading-snug line-clamp-2">
+                              {c.name}
+                            </span>
+                            <span className="text-[11px] text-on-surface-variant mt-2 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px] text-secondary">person</span>
+                              <span className="truncate">{c.prof}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            /* SESIONES REALES EN CALENDARIO */
+            <div className="flex flex-col gap-3 pb-6">
+              {isLoadingRealClasses ? (
+                <div className="flex justify-center p-10">
+                  <span className="material-symbols-outlined animate-spin text-secondary text-3xl">refresh</span>
+                </div>
+              ) : realClasses.length === 0 ? (
+                <div className="text-center bg-surface-container-lowest rounded-2xl border border-surface-container py-10 mt-2">
+                  <span className="material-symbols-outlined text-[40px] text-surface-variant mb-2">event_busy</span>
+                  <p className="text-on-surface font-bold">No hay sesiones programadas</p>
+                  <p className="text-secondary text-sm mt-1">Usa el botón "Repetir" en Horario Semanal para generar las próximas 4 semanas.</p>
+                </div>
+              ) : (
+                realClasses.map((cls) => {
+                  const startDate = new Date(cls.fecha_hora_inicio);
+                  const endDate = new Date(cls.fecha_hora_fin);
+                  const dateStr = startDate.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' });
+                  const timeRange = `${startDate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`;
+                  const profName = cls.profiles ? `${cls.profiles.name} ${cls.profiles.last_name || ''}`.trim() : 'Sin profesor';
+
+                  return (
+                    <article key={cls.id_clase} className="p-4 rounded-2xl premium-card flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-col">
+                          <span className="font-label-caps text-secondary text-xs uppercase font-bold tracking-wider">
+                            {dateStr} • {timeRange}
+                          </span>
+                          <h3 className="font-headline-sm font-bold text-on-surface mt-0.5">
+                            {cls.nombre_clase}
+                          </h3>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full font-label-caps text-[10px] font-bold shrink-0 ${
+                          cls.estado_clase === 'cancelada' ? 'bg-error/10 text-error' :
+                          cls.estado_clase === 'en_curso' ? 'bg-emerald-500/10 text-emerald-600' :
+                          'bg-primary/10 text-primary'
+                        }`}>
+                          {cls.estado_clase?.toUpperCase() || 'PROGRAMADA'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-on-surface-variant pt-2 border-t border-surface-container">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[16px] text-secondary">meeting_room</span>
+                            {cls.sala || 'Sala Principal'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[16px] text-secondary">person</span>
+                            {profName}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[16px] text-primary">group</span>
+                            {cls.cupos_inscritos || 0} / {cls.cupo_maximo || 8}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRealClass(cls.id_clase, cls.nombre_clase, cls.fecha_hora_inicio)}
+                          className="px-2.5 py-1 rounded-lg bg-error/10 hover:bg-error/20 active:bg-error text-error active:text-white font-bold text-xs flex items-center gap-1 transition-colors shrink-0"
+                          title="Eliminar sesión del calendario"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                          Eliminar
                         </button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          )}
         </section>
       )}
 

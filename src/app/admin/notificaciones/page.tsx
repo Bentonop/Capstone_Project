@@ -101,6 +101,21 @@ export default function AdminNotificacionesPage() {
     }
   };
 
+  const handleDeleteClass = async (claseId: number, className: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la clase "${className}"? Todas las reservas asociadas serán canceladas.`)) return;
+
+    try {
+      const { error } = await supabase.from('clase').delete().eq('id_clase', claseId);
+      if (error) throw error;
+      alert(`Clase "${className}" eliminada con éxito.`);
+      setSelectedClassId(null);
+      fetchNotificaciones();
+    } catch (err: any) {
+      alert("Error al eliminar la clase: " + err.message);
+    }
+  };
+
   const getIconForType = (tipo: string) => {
     switch(tipo) {
       case 'critica': return <span className="material-symbols-outlined text-error text-[24px]">report</span>;
@@ -271,12 +286,30 @@ export default function AdminNotificacionesPage() {
               </div>
             ) : null}
             
-            <button 
-              onClick={() => setSelectedClassId(null)}
-              className="w-full h-12 mt-2 bg-surface-container-high text-on-surface font-bold rounded-xl active:bg-surface-container transition-colors"
-            >
-              Cerrar
-            </button>
+            {classDetails && !classDetails.error ? (
+              <div className="flex gap-2 mt-2">
+                <button 
+                  onClick={() => handleDeleteClass(classDetails.id_clase, classDetails.nombre_clase)}
+                  className="flex-1 h-12 bg-error/10 hover:bg-error/20 active:bg-error text-error active:text-white font-bold rounded-xl border border-error/20 flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                  Eliminar Clase
+                </button>
+                <button 
+                  onClick={() => setSelectedClassId(null)}
+                  className="flex-1 h-12 bg-surface-container-high text-on-surface font-bold rounded-xl active:bg-surface-container transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setSelectedClassId(null)}
+                className="w-full h-12 mt-2 bg-surface-container-high text-on-surface font-bold rounded-xl active:bg-surface-container transition-colors"
+              >
+                Cerrar
+              </button>
+            )}
           </div>
         </div>
       )}
