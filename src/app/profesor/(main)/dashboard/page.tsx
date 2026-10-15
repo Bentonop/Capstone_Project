@@ -56,6 +56,11 @@ export default function ProfesorDashboardPage() {
     fetchProfile();
   }, []);
 
+  function toLocalISOString(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
   useEffect(() => {
     async function fetchClasses() {
       setIsLoading(true);
@@ -75,8 +80,8 @@ export default function ProfesorDashboardPage() {
           .from("clase")
           .select("*")
           .eq("id_profesor", authUser.id)
-          .gte("fecha_hora_inicio", startOfDay.toISOString())
-          .lte("fecha_hora_inicio", endOfDay.toISOString())
+          .gte("fecha_hora_inicio", toLocalISOString(startOfDay))
+          .lte("fecha_hora_inicio", toLocalISOString(endOfDay))
           .order("fecha_hora_inicio", { ascending: true });
 
         if (error) throw error;
@@ -110,7 +115,7 @@ export default function ProfesorDashboardPage() {
           .from("clase")
           .select("*")
           .eq("id_profesor", authUser.id)
-          .gt("fecha_hora_inicio", endOfDay.toISOString())
+          .gt("fecha_hora_inicio", toLocalISOString(endOfDay))
           .order("fecha_hora_inicio", { ascending: true })
           .limit(1)
           .maybeSingle();

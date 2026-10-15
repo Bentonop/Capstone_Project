@@ -252,6 +252,11 @@ export default function AdminGestionPage() {
   };
 
   // --- CALENDAR (PLANTILLAS) FUNCTIONS ---
+  function formatLocalDateTime(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
   async function fetchPlantillas() {
     if (!supabase) return;
     const { data } = await supabase
@@ -314,12 +319,70 @@ export default function AdminGestionPage() {
 
     if (error) {
       alert("Error al guardar plantilla. ¿Ejecutaste el script horarios_fijos.sql en Supabase?");
-    } else {
-      showToast("Bloque(s) de horario añadido(s).");
-      setIsAddingTemplate(false);
-      setTName("");
-      fetchPlantillas();
+      return;
     }
+
+    // Generar inmediatamente las sesiones reales en 'clase' para las próximas 4 semanas
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [sh, sm] = tStartTime.split(':').map(Number);
+      const [eh, em] = tEndTime.split(':').map(Number);
+      const targetDayNums = new Set(tDays.map(d => daysOfWeekMap[d as keyof typeof daysOfWeekMap]));
+
+      const futureDate = new Date(today);
+      futureDate.setDate(today.getDate() + 28);
+
+      const { data: existingClasses } = await supabase.from('clase')
+        .select('nombre_clase, fecha_hora_inicio')
+        .gte('fecha_hora_inicio', formatLocalDateTime(today))
+        .lte('fecha_hora_inicio', formatLocalDateTime(futureDate));
+
+      const existingSet = new Set((existingClasses || []).map((c: any) => `${c.nombre_clase}_${c.fecha_hora_inicio}`));
+
+      const classSessions: any[] = [];
+      for (let i = 0; i < 28; i++) {
+        const currentDate = new Date(today);
+        currentDate.setDate(today.getDate() + i);
+        if (targetDayNums.has(currentDate.getDay())) {
+          const startDate = new Date(currentDate);
+          startDate.setHours(sh || 0, sm || 0, 0, 0);
+
+          const endDate = new Date(currentDate);
+          endDate.setHours(eh || 0, em || 0, 0, 0);
+
+          const startStr = formatLocalDateTime(startDate);
+          const endStr = formatLocalDateTime(endDate);
+          const key = `${tName}_${startStr}`;
+
+          if (!existingSet.has(key)) {
+            classSessions.push({
+              nombre_clase: tName,
+              fecha_hora_inicio: startStr,
+              fecha_hora_fin: endStr,
+              id_profesor: tProf || null,
+              sala: tRoom,
+              cupo_maximo: 8,
+              cupos_inscritos: 0,
+              estado_clase: "programada"
+            });
+          }
+        }
+      }
+
+      if (classSessions.length > 0) {
+        await supabase.from('clase').insert(classSessions);
+      }
+    } catch (genErr) {
+      console.error("Error al generar sesiones para el bloque:", genErr);
+    }
+
+    showToast("Bloque añadido y sesiones generadas en el calendario.");
+    setIsAddingTemplate(false);
+    setTName("");
+    fetchPlantillas();
+    fetchRealClasses();
   };
 
   const handleDeleteTemplate = async (id: string, name: string, e: React.MouseEvent) => {
@@ -351,7 +414,7 @@ export default function AdminGestionPage() {
           .from('clase')
           .delete()
           .eq('nombre_clase', name)
-          .gte('fecha_hora_inicio', today.toISOString());
+          .gte('fecha_hora_inicio', formatLocalDateTime(today));
 
         if (errClasses) {
           console.error("Error al eliminar clases futuras:", errClasses);
@@ -364,6 +427,7 @@ export default function AdminGestionPage() {
       }
 
       fetchPlantillas();
+      fetchRealClasses();
     } catch (err: any) {
       console.error(err);
       alert("Error al eliminar: " + (err.message || err));
@@ -380,7 +444,7 @@ export default function AdminGestionPage() {
       const { data, error } = await supabase
         .from('clase')
         .select('*, profiles:id_profesor(name, last_name)')
-        .gte('fecha_hora_inicio', today.toISOString())
+        .gte('fecha_hora_inicio', formatLocalDateTime(today))
         .order('fecha_hora_inicio', { ascending: true })
         .limit(60);
 
@@ -439,8 +503,8 @@ export default function AdminGestionPage() {
       
       const { data: existingClasses } = await supabase.from('clase')
           .select('nombre_clase, fecha_hora_inicio')
-          .gte('fecha_hora_inicio', today.toISOString())
-          .lte('fecha_hora_inicio', futureDate.toISOString());
+          .gte('fecha_hora_inicio', formatLocalDateTime(today))
+          .lte('fecha_hora_inicio', formatLocalDateTime(futureDate));
           
       const existingSet = new Set((existingClasses || []).map(c => `${c.nombre_clase}_${c.fecha_hora_inicio}`));
       
@@ -462,16 +526,19 @@ export default function AdminGestionPage() {
             const [eh, em] = t.hora_fin.split(':');
             endDate.setHours(parseInt(eh), parseInt(em), 0, 0);
             
-            const key = `${t.nombre_clase}_${startDate.toISOString()}`;
+            const startStr = formatLocalDateTime(startDate);
+            const endStr = formatLocalDateTime(endDate);
+            const key = `${t.nombre_clase}_${startStr}`;
             
             if (!existingSet.has(key)) {
                 inserts.push({
                    nombre_clase: t.nombre_clase,
-                   fecha_hora_inicio: startDate.toISOString(),
-                   fecha_hora_fin: endDate.toISOString(),
+                   fecha_hora_inicio: startStr,
+                   fecha_hora_fin: endStr,
                    id_profesor: t.id_profesor,
                    sala: t.sala,
                    cupo_maximo: t.cupo_maximo,
+                   cupos_inscritos: 0,
                    estado_clase: "programada"
                 });
             }
@@ -485,7 +552,7 @@ export default function AdminGestionPage() {
       } else {
         showToast(`Todo al día. No hubo clases nuevas que generar.`);
       }
-      
+      fetchRealClasses();
     } catch (err: any) {
       console.error(err);
       alert("Error al generar las clases: " + err.message);
