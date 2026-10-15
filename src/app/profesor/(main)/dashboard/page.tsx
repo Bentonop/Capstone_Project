@@ -43,7 +43,7 @@ export default function ProfesorDashboardPage() {
           .from("profiles")
           .select("*")
           .eq("id", authUser.id)
-          .single();
+          .maybeSingle();
         
         if (user && user.name) {
           setProfileName(user.name);
@@ -82,18 +82,7 @@ export default function ProfesorDashboardPage() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const now = new Date();
-          const isToday = selectedDate.toDateString() === now.toDateString();
-          
-          const filteredData = data.filter((c: any) => {
-            if (isToday) {
-              const end = new Date(c.fecha_hora_fin);
-              return end > now;
-            }
-            return true;
-          });
-
-          const mappedClasses: ClassSession[] = filteredData.map((c: any) => {
+          const mappedClasses: ClassSession[] = data.map((c: any) => {
             const start = new Date(c.fecha_hora_inicio);
             const end = new Date(c.fecha_hora_fin);
             const duration = Math.round((end.getTime() - start.getTime()) / 60000);
@@ -116,14 +105,15 @@ export default function ProfesorDashboardPage() {
           setClasses([]);
         }
 
-        // Fetch Next Class
+        // Fetch Next Class for this professor
         const { data: nextData } = await supabase
           .from("clase")
           .select("*")
+          .eq("id_profesor", authUser.id)
           .gt("fecha_hora_inicio", endOfDay.toISOString())
           .order("fecha_hora_inicio", { ascending: true })
           .limit(1)
-          .single();
+          .maybeSingle();
         
         if (nextData) {
           const start = new Date(nextData.fecha_hora_inicio);
