@@ -14,8 +14,20 @@ export default function MisClasesPage() {
     async function fetchMyClasses() {
       if (!supabase) return;
       
-      const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).single();
-      if (!user) {
+      let targetUserId: string | null = null;
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.id) targetUserId = authUser.id;
+      } catch (e) {
+        console.error("Error getting auth user:", e);
+      }
+
+      if (!targetUserId) {
+        const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).maybeSingle();
+        targetUserId = user?.id || null;
+      }
+
+      if (!targetUserId) {
         setIsLoading(false);
         return;
       }
@@ -23,7 +35,7 @@ export default function MisClasesPage() {
       const { data: subs } = await supabase
         .from("user_suscripciones")
         .select("creditos_restantes")
-        .eq("user_id", user.id)
+        .eq("user_id", targetUserId)
         .eq("estado", "activa")
         .gt("creditos_restantes", 0);
         
@@ -42,7 +54,7 @@ export default function MisClasesPage() {
               profiles:id_profesor (name)
            )
         `)
-        .eq("id_usuario", user.id)
+        .eq("id_usuario", targetUserId)
         .order("fecha_operacion", { ascending: false });
         
       if (!error && data) {

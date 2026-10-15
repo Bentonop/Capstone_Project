@@ -8,7 +8,7 @@ import QrScanner from "@/components/shared/QrScanner";
 type StudentStatus = "presente" | "pendiente" | "cancelado";
 
 interface Student {
-  id: number;
+  id: string | number;
   reserva_id: number;
   name: string;
   plan: string;
@@ -45,18 +45,37 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
         .from('reserva')
         .select(`
            *,
-           profiles:id_usuario (id, name, last_name, phone, contacto_emergencia, condicion_medica)
+           profiles:id_usuario (id, name, last_name, phone, contacto_emergencia, condicion_medica, correo)
         `)
         .eq('id_clase', id);
 
       if (reservas) {
+        // Fetch plans for these students
+        const userIds = Array.from(new Set(reservas.map(r => r.id_usuario)));
+        let subMap: Record<string, string> = {};
+        if (userIds.length > 0) {
+          const { data: subs } = await supabase
+            .from('user_suscripciones')
+            .select('user_id, planes:plan_id(nombre_plan)')
+            .in('user_id', userIds)
+            .eq('estado', 'activa');
+
+          if (subs) {
+            subs.forEach((s: any) => {
+              const planName = s.planes?.nombre_plan;
+              if (planName) subMap[s.user_id] = planName;
+            });
+          }
+        }
+
         const mappedStudents: Student[] = reservas.map(r => {
           const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+          const fullName = [profile?.name, profile?.last_name].filter(Boolean).join(' ').trim() || profile?.correo || 'Alumno';
           return {
             id: r.id_usuario,
             reserva_id: r.id_reserva,
-            name: `${profile?.name} ${profile?.last_name}`,
-            plan: "Plan Activo", 
+            name: fullName,
+            plan: subMap[r.id_usuario] || "Plan Activo", 
             status: r.estado_reserva === "presente" ? "presente" : (r.estado_reserva === "cancelada" ? "cancelado" : "pendiente"),
             time: null,
             type: "normal",
@@ -124,7 +143,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
     }
   };
 
-  const handleCheckIn = async (id: number, e: React.MouseEvent) => {
+  const handleCheckIn = async (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
     
     const student = students.find(s => s.id === id);
@@ -370,12 +389,19 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
             <div className="flex items-center justify-between px-1">
               <div>
                 <h3 className="font-headline-sm text-headline-sm text-on-surface">Róster de Alumnos</h3>
-                <p className="font-body-sm text-body-sm text-secondary">{totalCount}/8 cupos ocupados</p>
+                <p className="font-body-sm text-body-sm text-secondary">{totalCount}/{claseDetalle?.cupo_maximo || 8} cupos ocupados</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-space-xs mt-1">
-              {students.map((student) => (
+              {students.length === 0 ? (
+                <div className="text-center py-8 bg-surface-container-lowest rounded-xl border border-surface-container">
+                  <span className="material-symbols-outlined text-secondary text-3xl mb-1">group_off</span>
+                  <p className="font-headline-sm text-sm text-on-surface">No hay alumnos inscritos aún</p>
+                  <p className="font-body-sm text-xs text-secondary mt-0.5">Los cupos están disponibles para reserva.</p>
+                </div>
+              ) : (
+                students.map((student) => (
                 <div 
                   key={student.id} 
                   className={`rounded-xl p-space-sm flex flex-col gap-2 transition-all cursor-pointer ${student.status === 'cancelado' ? 'bg-surface-container/50 opacity-60 border border-transparent' : 'premium-card-high hover:border-primary/30'} ${selectedStudent?.id === student.id ? 'ring-1 ring-primary' : ''}`}
@@ -460,7 +486,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                     </div>
                   )}
                 </div>
-              ))}
+              )))}
             </div>
           </section>
 

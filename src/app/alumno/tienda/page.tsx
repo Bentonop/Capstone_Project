@@ -53,9 +53,21 @@ export default function TiendaPage() {
     try {
       if (!supabase) throw new Error("Supabase no inicializado");
       
-      // Get current mock user
-      const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).single();
-      if (!user) throw new Error("No hay usuario alumno de prueba en la DB.");
+      // Get current auth user
+      let userId: string | null = null;
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.id) userId = authUser.id;
+      } catch (e) {
+        console.error("Error getting auth user:", e);
+      }
+
+      if (!userId) {
+        const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).maybeSingle();
+        userId = user?.id || null;
+      }
+
+      if (!userId) throw new Error("No hay usuario autenticado.");
 
       const isManual = paymentMethod === "transferencia";
       const estadoSub = isManual ? "pendiente" : "activa";
@@ -64,7 +76,7 @@ export default function TiendaPage() {
 
       // 1. Crear Suscripcion
       const { data: subData, error: subError } = await supabase.from("user_suscripciones").insert({
-        user_id: user.id,
+        user_id: userId,
         plan_id: selectedPlan.id_plan,
         estado: estadoSub,
         creditos_restantes: creditos
@@ -75,7 +87,7 @@ export default function TiendaPage() {
       // 2. Crear Pago
       const { error: pagoError } = await supabase.from("user_pagos").insert({
         suscripcion_id: subData.id,
-        user_id: user.id,
+        user_id: userId,
         monto: selectedPlan.precio,
         metodo_pago: paymentMethod,
         estado: estadoPago,

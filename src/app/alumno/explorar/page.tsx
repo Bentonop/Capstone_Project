@@ -175,22 +175,58 @@ function ExplorarContent() {
       }
     }
 
+    async function getCurrentUserId(): Promise<string | null> {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.id) return authUser.id;
+      } catch (e) {
+        console.error("Error getting auth user:", e);
+      }
+      const { data: fallbackUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "alumno")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return fallbackUser?.id || null;
+    }
+
     async function fetchActiveSubscription() {
       try {
         if (!supabase) return;
-        const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).single();
-        if (user) {
-          const { data: sub } = await supabase
+        const userId = await getCurrentUserId();
+        if (!userId) return;
+
+        let { data: sub } = await supabase
+          .from("user_suscripciones")
+          .select("*, planes(nombre_plan)")
+          .eq("user_id", userId)
+          .eq("estado", "activa")
+          .gt("creditos_restantes", 0)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Si el alumno no tiene suscripción activa, le creamos una con créditos
+        if (!sub) {
+          const { data: newSub } = await supabase
             .from("user_suscripciones")
+            .insert({
+              user_id: userId,
+              plan_id: "33333333-0000-0000-0000-000000000003", // Plan Libre
+              estado: "activa",
+              creditos_restantes: 999,
+              fecha_inicio: new Date().toISOString(),
+              fecha_fin: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            })
             .select("*, planes(nombre_plan)")
-            .eq("user_id", user.id)
-            .eq("estado", "activa")
-            .gt("creditos_restantes", 0)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-          if (sub) setActiveSubscription(sub);
+            .maybeSingle();
+
+          if (newSub) sub = newSub;
         }
+
+        if (sub) setActiveSubscription(sub);
       } catch (err) {
         console.error("Error fetching subscription", err);
       }
@@ -199,12 +235,17 @@ function ExplorarContent() {
     async function fetchUserReservations() {
       try {
         if (!supabase) return;
-        const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).single();
-        if (user) {
-          const { data: reservas } = await supabase.from("reserva").select("id_clase").eq("id_usuario", user.id).eq("estado_reserva", "confirmada");
-          if (reservas) {
-             setMisReservas(reservas.map((r: any) => r.id_clase.toString()));
-          }
+        const userId = await getCurrentUserId();
+        if (!userId) return;
+
+        const { data: reservas } = await supabase
+          .from("reserva")
+          .select("id_clase")
+          .eq("id_usuario", userId)
+          .eq("estado_reserva", "confirmada");
+
+        if (reservas) {
+          setMisReservas(reservas.map((r: any) => r.id_clase.toString()));
         }
       } catch (err) {
         console.error("Error fetching user reservations", err);
