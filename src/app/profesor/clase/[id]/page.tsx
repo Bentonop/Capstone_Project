@@ -28,7 +28,11 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
   const [students, setStudents] = useState<Student[]>([]);
   const [claseDetalle, setClaseDetalle] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
+  const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
   useEffect(() => {
     async function fetchClaseData() {
       if (!supabase) return;
@@ -45,20 +49,23 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
         .from('reserva')
         .select(`
            *,
-           profiles:id_usuario (id, name, last_name, phone, contacto_emergencia, condicion_medica)
+           profiles:id_usuario (id, name, last_name, phone, contacto_emergencia, condicion_medica),
+           asistencia (*)
         `)
         .eq('id_clase', id);
 
       if (reservas) {
         const mappedStudents: Student[] = reservas.map(r => {
           const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+          const tieneAsistencia = r.asistencia && r.asistencia.length > 0 && r.asistencia[0]?.fecha_hora_ingreso;
+
           return {
             id: r.id_usuario,
             reserva_id: r.id_reserva,
-            name: `${profile?.name} ${profile?.last_name}`,
+            name: `${profile?.name || ''} ${profile?.last_name || ''}`.trim() || 'Alumno',
             plan: "Plan Activo", 
-            status: r.estado_reserva === "presente" ? "presente" : (r.estado_reserva === "cancelada" ? "cancelado" : "pendiente"),
-            time: null,
+            status: tieneAsistencia || r.estado_reserva === "presente" ? "presente" : (r.estado_reserva === "cancelada" ? "cancelado" : "pendiente"),
+            time: tieneAsistencia ? new Date(r.asistencia[0].fecha_hora_ingreso).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : null,
             type: "normal",
             isNew: false,
             emergencyContact: profile?.contacto_emergencia || "No registrado",
@@ -74,10 +81,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
     fetchClaseData();
   }, [id]);
 
-  const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-
   const presentCount = students.filter(s => s.status === "presente").length;
   const totalCount = students.filter(s => s.status !== "cancelado").length;
   const progressPercent = totalCount === 0 ? 0 : (presentCount / totalCount) * 100;
@@ -87,12 +90,32 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
     setTimeout(() => setToastMessage(null), 2800);
   };
 
+  // Función interna para registrar asistencia en las tablas asistencia y reserva
+  const registrarAsistenciaBD = async (reservaId: number, tokenUsado: string) => {
+    if (!supabase) return;
+
+    // 1. Guardar o actualizar registro en la tabla asistencia
+    await supabase
+      .from("asistencia")
+      .upsert({
+        id_reserva: reservaId,
+        fecha_hora_ingreso: new Date().toISOString(),
+        metodo_ingreso: "QR",
+        token_qr_usado: tokenUsado
+      }, { onConflict: 'id_reserva' });
+
+    // 2. Actualizar estado en reserva
+    await supabase
+      .from("reserva")
+      .update({ estado_reserva: "presente" })
+      .eq("id_reserva", reservaId);
+  };
+
   const handleSimulateScan = async () => {
     const pendingStudent = students.find(s => s.status === "pendiente");
     if (pendingStudent) {
-      if (supabase) {
-        await supabase.from("reserva").update({ estado_reserva: "presente" }).eq("id_reserva", pendingStudent.reserva_id);
-      }
+      await registrarAsistenciaBD(pendingStudent.reserva_id, `simulacion-${pendingStudent.reserva_id}`);
+      
       const updatedStudent = { ...pendingStudent, status: "presente" as StudentStatus, time: "Ahora" };
       setStudents(prev => prev.map(s => s.id === pendingStudent.id ? updatedStudent : s));
       setSelectedStudent(updatedStudent);
@@ -103,7 +126,24 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
   };
 
   const handleScanResult = async (decodedText: string) => {
+    let targetReservaId: number | null = null;
+    let targetClaseId: number | null = null;
+
+    try {
+      const parsed = JSON.parse(decodedText);
+      targetReservaId = Number(parsed.id_reserva);
+      targetClaseId = Number(parsed.id_clase);
+    } catch {
+      targetReservaId = Number(decodedText) || null;
+    }
+
+    if (targetClaseId && String(targetClaseId) !== String(id)) {
+      showToast("Este código QR pertenece a otra clase.");
+      return;
+    }
+
     const student = students.find(s => 
+      (targetReservaId && s.reserva_id === targetReservaId) || 
       s.id.toString() === decodedText || 
       s.reserva_id.toString() === decodedText || 
       s.name.toLowerCase() === decodedText.toLowerCase()
@@ -111,31 +151,32 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
     
     if (student) {
       if (student.status === "pendiente") {
-        if (supabase) {
-           await supabase.from("reserva").update({ estado_reserva: "presente" }).eq("id_reserva", student.reserva_id);
-        }
+        await registrarAsistenciaBD(student.reserva_id, decodedText);
+
         const updatedStudent = { ...student, status: "presente" as StudentStatus, time: "Ahora" };
         setStudents(prev => prev.map(s => s.id === student.id ? updatedStudent : s));
         setSelectedStudent(updatedStudent);
         showToast(`QR Exitoso: ${student.name}`);
+      } else if (student.status === "presente") {
+        showToast(`${student.name} ya está presente.`);
       }
     } else {
       console.log("QR no reconocido o alumno no encontrado:", decodedText);
+      showToast("QR no válido o alumno no inscrito.");
     }
   };
 
-  const handleCheckIn = async (id: number, e: React.MouseEvent) => {
+  const handleCheckIn = async (studentId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    const student = students.find(s => s.id === id);
+    const student = students.find(s => s.id === studentId);
     if (!student || !supabase) return;
 
-    // Update DB
-    await supabase.from("reserva").update({ estado_reserva: "presente" }).eq("id_reserva", student.reserva_id);
+    await registrarAsistenciaBD(student.reserva_id, `manual-${student.reserva_id}`);
 
     const updatedStudent = { ...student, status: "presente" as StudentStatus, time: "Ahora" };
     setStudents(prev => 
-      prev.map(s => s.id === id ? updatedStudent : s)
+      prev.map(s => s.id === studentId ? updatedStudent : s)
     );
     setSelectedStudent(updatedStudent);
     showToast(`Ingresó: ${student.name}. Revisa sus datos.`);
@@ -149,7 +190,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
   const handleStartClass = async () => {
     if (!supabase || !claseDetalle) return;
     try {
-      // 1. Actualizar el estado de la clase a 'en_curso'
       const { error: updateError } = await supabase
         .from('clase')
         .update({ estado_clase: 'en_curso' })
@@ -159,11 +199,9 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
       
       setClaseDetalle({ ...claseDetalle, estado_clase: 'en_curso' });
 
-      // 2. Insertar notificación para el administrador
       const tituloNotificacion = `🟢 Clase Iniciada: ${claseDetalle.nombre_clase}`;
       const mensajeNotificacion = `El profesor ha iniciado la sesión. Asistencia confirmada: ${presentCount}/${totalCount} alumnos.`;
       
-      // Intentamos insertar, si la tabla no existe aún no romperá la UI pero lo capturamos
       const { error: notifError } = await supabase
         .from('notificaciones')
         .insert([{
@@ -224,7 +262,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                         PROGRAMADA
                       </span>
                     )}
-                    <span className="text-secondary font-label-caps text-label-caps uppercase tracking-wider ml-2">Sala Pole 1</span>
+                    <span className="text-secondary font-label-caps text-label-caps uppercase tracking-wider ml-2">{claseDetalle?.sala || "Sala Pole 1"}</span>
                   </div>
                   <h2 className="font-headline-md text-headline-md text-on-surface truncate">{claseDetalle?.nombre_clase || "Cargando..."}</h2>
                   <p className="font-body-sm text-body-sm text-secondary mt-0.5 flex items-center gap-1">
@@ -261,7 +299,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                   </span>
                 </div>
               </div>
-              
+
               {claseDetalle?.estado_clase !== 'en_curso' && (
                 <div className="mt-4 pt-4 border-t border-surface-container">
                   <button 
@@ -326,7 +364,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                 <div className="flex flex-col items-center py-2">
                   <div className="p-5 bg-surface-container rounded-2xl shadow-inner border border-surface-container-high flex flex-col items-center w-full">
                     <div className="w-52 h-52 bg-white p-2 rounded-xl flex items-center justify-center shadow-md">
-                      {/* Fake QR representation */}
                       <svg className="w-full h-full" fill="#1b1c1b" viewBox="0 0 100 100">
                         <rect fill="#111625" height="28" rx="4" width="28" x="5" y="5"></rect>
                         <rect fill="#ffffff" height="20" rx="2" width="20" x="9" y="9"></rect>
@@ -430,7 +467,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                     </div>
                   </div>
 
-                  {/* Expanded Details / Emergency Info */}
                   {selectedStudent?.id === student.id && student.status !== 'cancelado' && (
                     <div className="mt-2 pt-3 border-t border-surface-container flex flex-col gap-2 animate-in fade-in slide-in-from-top-1">
                       {student.healthConditions && (
@@ -490,7 +526,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
         </div>
       </main>
 
-      {/* Incident Modal */}
       {isIncidentModalOpen && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end justify-center">
           <div className="bg-surface-container-lowest border-t border-surface-container w-full max-w-lg rounded-t-3xl p-space-lg flex flex-col shadow-2xl animate-in slide-in-from-bottom">
@@ -528,7 +563,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {/* Toast Notification */}
       <div className={`fixed top-20 inset-x-4 z-50 flex items-center justify-center pointer-events-none transition-all duration-300 ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
         <div className="bg-surface-container-highest border border-surface-container-high text-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 max-w-sm">
           <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
