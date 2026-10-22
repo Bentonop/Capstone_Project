@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo Arquitectónico 4+1 · Cuerpo y Alma (Duoc UC)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        pre, code { font-family: 'JetBrains Mono', monospace; }
+        .mermaid { display: flex; justify-content: center; }
+        .mermaid svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Institucional -->
+    <header class="bg-[#1F3864] text-white shadow-md border-b-4 border-[#00B0F0]">
+        <div class="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <span class="inline-block bg-[#00B0F0] text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded text-white mb-1">
+                    Proyecto Capstone · PTY4614 · Duoc UC
+                </span>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Modelo de Arquitectura 4+1 de Kruchten</h1>
+                <p class="text-slate-300 text-sm">Sistema Web Integral · Academia de Pole Dance &quot;Cuerpo y Alma&quot;</p>
+            </div>
+            <div class="text-left sm:text-right text-xs text-slate-300">
+                <p><strong class="text-white">Equipo:</strong> José Rivera · Benjamín García · Manuel Campos</p>
+                <p><strong class="text-white">Docente Guía:</strong> Reginaldo Salinas</p>
+                <p class="text-[#00B0F0] font-medium mt-1">Plataforma de Visualización Técnica</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Barra de Navegación de Pestañas -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto space-x-2 py-2">
+            <button onclick="switchTab('logica')" id="tab-btn-logica" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 bg-[#1F3864] text-white shadow-sm">
+                1. Vista Lógica (Clases)
+            </button>
+            <button onclick="switchTab('desarrollo')" id="tab-btn-desarrollo" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                2. Vista de Desarrollo (Capas)
+            </button>
+            <button onclick="switchTab('procesos')" id="tab-btn-procesos" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                3. Vista de Procesos (Secuencia)
+            </button>
+            <button onclick="switchTab('fisica')" id="tab-btn-fisica" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                4. Vista Física (Despliegue)
+            </button>
+            <button onclick="switchTab('escenarios')" id="tab-btn-escenarios" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 text-slate-600 hover:bg-slate-100">
+                5. Escenarios (+1 Casos de Uso)
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- SECCIÓN 1: VISTA LÓGICA -->
+        <section id="section-logica" class="view-section space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold text-[#00B0F0] uppercase tracking-wider">Kruchten View 1</span>
+                        <h2 class="text-2xl font-bold text-[#1F3864]">Vista Lógica (Logical View)</h2>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Representa la estructura interna del sistema, las entidades del dominio, atributos, métodos y sus relaciones.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCode('code-logica')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copiar Código Mermaid
+                        </button>
+                        <a href="https://mermaid.live" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3864] hover:bg-blue-900 text-white text-xs font-semibold rounded-md transition-colors">
+                            Abrir Mermaid Live ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Diagrama Renderizado -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-x-auto my-6">
+                    <div class="mermaid">
+classDiagram
+    class Profile {
+        +UUID id
+        +String name
+        +String last_name
+        +String rut
+        +String correo
+        +String phone
+        +String role
+        +String condicion_medica
+        +String contacto_emergencia
+        +actualizarPerfil()
+        +consultarRol() String
+    }
+
+    class Clase {
+        +int id_clase
+        +UUID id_profesor
+        +String nombre_clase
+        +int cupo_maximo
+        +int cupos_inscritos
+        +DateTime fecha_hora_inicio
+        +DateTime fecha_hora_fin
+        +String estado_clase
+        +String sala
+        +verificarCupoDisponible() bool
+        +incrementarInscritos()
+        +cancelarSesion()
+    }
+
+    class Reserva {
+        +int id_reserva
+        +UUID id_usuario
+        +int id_clase
+        +DateTime fecha_operacion
+        +String estado_reserva
+        +confirmarReserva()
+        +anularReserva()
+    }
+
+    class Asistencia {
+        +int id_asistencia
+        +int id_reserva
+        +String metodo_ingreso
+        +String token_qr_usado
+        +DateTime fecha_hora_ingreso
+        +validarToken() bool
+        +registrarIngresoManual()
+    }
+
+    class Plan {
+        +UUID id_plan
+        +String nombre_plan
+        +numeric precio
+        +int creditos_clases
+        +int duracion_dias
+        +bool estado
+        +activarPlan()
+    }
+
+    class UserSuscripcion {
+        +UUID id
+        +UUID user_id
+        +UUID plan_id
+        +int creditos_restantes
+        +DateTime fecha_inicio
+        +DateTime fecha_fin
+        +String estado
+        +descontarCredito() bool
+        +restituirCredito()
+    }
+
+    class UserPago {
+        +UUID id
+        +UUID suscripcion_id
+        +UUID user_id
+        +numeric monto
+        +String metodo_pago
+        +String comprobante_url
+        +String estado
+        +aprobarPago()
+        +rechazarPago()
+    }
+
+    Profile "1" <-- "0..*" Clase : profesor_asignado
+    Profile "1" <-- "0..*" Reserva : alumna_reserva
+    Clase "1" <-- "0..*" Reserva : sesiones_agendadas
+    Reserva "1" <-- "0..1" Asistencia : valida_ingreso
+    Profile "1" <-- "0..*" UserSuscripcion : contrata
+    Plan "1" <-- "0..*" UserSuscripcion : especifica
+    UserSuscripcion "1" <-- "0..*" UserPago : audita_comprobante
+                    </div>
+                </div>
+
+                <!-- Código Fuente para Copiar -->
+                <div class="mt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Código Mermaid (classDiagram)</h3>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto"><code id="code-logica">classDiagram
+    class Profile {
+        +UUID id
+        +String name
+        +String last_name
+        +String rut
+        +String correo
+        +String phone
+        +String role
+        +String condicion_medica
+        +String contacto_emergencia
+        +actualizarPerfil()
+        +consultarRol() String
+    }
+
+    class Clase {
+        +int id_clase
+        +UUID id_profesor
+        +String nombre_clase
+        +int cupo_maximo
+        +int cupos_inscritos
+        +DateTime fecha_hora_inicio
+        +DateTime fecha_hora_fin
+        +String estado_clase
+        +String sala
+        +verificarCupoDisponible() bool
+        +incrementarInscritos()
+        +cancelarSesion()
+    }
+
+    class Reserva {
+        +int id_reserva
+        +UUID id_usuario
+        +int id_clase
+        +DateTime fecha_operacion
+        +String estado_reserva
+        +confirmarReserva()
+        +anularReserva()
+    }
+
+    class Asistencia {
+        +int id_asistencia
+        +int id_reserva
+        +String metodo_ingreso
+        +String token_qr_usado
+        +DateTime fecha_hora_ingreso
+        +validarToken() bool
+        +registrarIngresoManual()
+    }
+
+    class Plan {
+        +UUID id_plan
+        +String nombre_plan
+        +numeric precio
+        +int creditos_clases
+        +int duracion_dias
+        +bool estado
+        +activarPlan()
+    }
+
+    class UserSuscripcion {
+        +UUID id
+        +UUID user_id
+        +UUID plan_id
+        +int creditos_restantes
+        +DateTime fecha_inicio
+        +DateTime fecha_fin
+        +String estado
+        +descontarCredito() bool
+        +restituirCredito()
+    }
+
+    class UserPago {
+        +UUID id
+        +UUID suscripcion_id
+        +UUID user_id
+        +numeric monto
+        +String metodo_pago
+        +String comprobante_url
+        +String estado
+        +aprobarPago()
+        +rechazarPago()
+    }
+
+    Profile "1" <-- "0..*" Clase : profesor_asignado
+    Profile "1" <-- "0..*" Reserva : alumna_reserva
+    Clase "1" <-- "0..*" Reserva : sesiones_agendadas
+    Reserva "1" <-- "0..1" Asistencia : valida_ingreso
+    Profile "1" <-- "0..*" UserSuscripcion : contrata
+    Plan "1" <-- "0..*" UserSuscripcion : especifica
+    UserSuscripcion "1" <-- "0..*" UserPago : audita_comprobante</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: VISTA DE DESARROLLO -->
+        <section id="section-desarrollo" class="view-section space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold text-[#00B0F0] uppercase tracking-wider">Kruchten View 2</span>
+                        <h2 class="text-2xl font-bold text-[#1F3864]">Vista de Desarrollo (Development View)</h2>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Estructura por capas, organización modular del código fuente (Next.js App Router, servicios lib/ y persistencia Supabase).
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCode('code-desarrollo')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copiar Código Mermaid
+                        </button>
+                        <a href="https://mermaid.live" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3864] hover:bg-blue-900 text-white text-xs font-semibold rounded-md transition-colors">
+                            Abrir Mermaid Live ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Diagrama Renderizado -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-x-auto my-6">
+                    <div class="mermaid">
+flowchart TD
+    subgraph CapaPresentacion ["Capa de Presentacion (Next.js & React App Router)"]
+        UI_Alumna["Modulo Alumna (Catalogo, Reservas, Pase QR)"]
+        UI_Docente["Modulo Docente (Nomina, Escaner QR, Pase Manual)"]
+        UI_Admin["Modulo Admin (Gestion Clases, Conciliacion Pagos)"]
+        UI_Shared["Componentes UI Compartidos (Stitch UI, BottomSheet, Toasts)"]
+    end
+
+    subgraph CapaServicios ["Capa de Negocio y Logica de Dominio (src/lib/)"]
+        S_Auth["Servicio Auth (auth.ts, SessionProvider)"]
+        S_Reservas["Servicio Reservas (reservas.ts - Regla 8 cupos)"]
+        S_Asistencia["Servicio Asistencia (asistencia.ts - Token 300s)"]
+        S_Pagos["Servicio Pagos (pagos.ts - Comprobantes)"]
+        S_Admin["Servicio Clases (clases_admin.ts - deleteCascade)"]
+    end
+
+    subgraph CapaAccesoDatos ["Capa de Acceso a Datos y Middleware"]
+        SupabaseClient["Supabase Client (SSR / Client-Side Queries)"]
+        Middleware["Next.js Middleware (Rutas Protegidas & RBAC)"]
+    end
+
+    subgraph CapaPersistencia ["Capa de Persistencia (Supabase Cloud BaaS)"]
+        DB_Core["PostgreSQL Core (profiles, clase, reserva, asistencia)"]
+        DB_Finance["PostgreSQL Finanzas (planes, user_suscripciones, user_pagos)"]
+        Auth_Service["Supabase Auth (JWT, OAuth, Whitelist Trigger)"]
+        Storage_Bucket["Supabase Storage (Comprobantes Bancarios)"]
+    end
+
+    UI_Alumna --> S_Reservas
+    UI_Alumna --> S_Asistencia
+    UI_Docente --> S_Asistencia
+    UI_Admin --> S_Pagos
+    UI_Admin --> S_Admin
+    UI_Shared --> S_Auth
+
+    S_Auth --> Middleware
+    S_Reservas --> SupabaseClient
+    S_Asistencia --> SupabaseClient
+    S_Pagos --> SupabaseClient
+    S_Admin --> SupabaseClient
+
+    Middleware --> Auth_Service
+    SupabaseClient --> DB_Core
+    SupabaseClient --> DB_Finance
+    SupabaseClient --> Storage_Bucket
+                    </div>
+                </div>
+
+                <!-- Código Fuente para Copiar -->
+                <div class="mt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Código Mermaid (flowchart TD)</h3>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto"><code id="code-desarrollo">flowchart TD
+    subgraph CapaPresentacion ["Capa de Presentacion (Next.js & React App Router)"]
+        UI_Alumna["Modulo Alumna (Catalogo, Reservas, Pase QR)"]
+        UI_Docente["Modulo Docente (Nomina, Escaner QR, Pase Manual)"]
+        UI_Admin["Modulo Admin (Gestion Clases, Conciliacion Pagos)"]
+        UI_Shared["Componentes UI Compartidos (Stitch UI, BottomSheet, Toasts)"]
+    end
+
+    subgraph CapaServicios ["Capa de Negocio y Logica de Dominio (src/lib/)"]
+        S_Auth["Servicio Auth (auth.ts, SessionProvider)"]
+        S_Reservas["Servicio Reservas (reservas.ts - Regla 8 cupos)"]
+        S_Asistencia["Servicio Asistencia (asistencia.ts - Token 300s)"]
+        S_Pagos["Servicio Pagos (pagos.ts - Comprobantes)"]
+        S_Admin["Servicio Clases (clases_admin.ts - deleteCascade)"]
+    end
+
+    subgraph CapaAccesoDatos ["Capa de Acceso a Datos y Middleware"]
+        SupabaseClient["Supabase Client (SSR / Client-Side Queries)"]
+        Middleware["Next.js Middleware (Rutas Protegidas & RBAC)"]
+    end
+
+    subgraph CapaPersistencia ["Capa de Persistencia (Supabase Cloud BaaS)"]
+        DB_Core["PostgreSQL Core (profiles, clase, reserva, asistencia)"]
+        DB_Finance["PostgreSQL Finanzas (planes, user_suscripciones, user_pagos)"]
+        Auth_Service["Supabase Auth (JWT, OAuth, Whitelist Trigger)"]
+        Storage_Bucket["Supabase Storage (Comprobantes Bancarios)"]
+    end
+
+    UI_Alumna --> S_Reservas
+    UI_Alumna --> S_Asistencia
+    UI_Docente --> S_Asistencia
+    UI_Admin --> S_Pagos
+    UI_Admin --> S_Admin
+    UI_Shared --> S_Auth
+
+    S_Auth --> Middleware
+    S_Reservas --> SupabaseClient
+    S_Asistencia --> SupabaseClient
+    S_Pagos --> SupabaseClient
+    S_Admin --> SupabaseClient
+
+    Middleware --> Auth_Service
+    SupabaseClient --> DB_Core
+    SupabaseClient --> DB_Finance
+    SupabaseClient --> Storage_Bucket</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: VISTA DE PROCESOS -->
+        <section id="section-procesos" class="view-section space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold text-[#00B0F0] uppercase tracking-wider">Kruchten View 3</span>
+                        <h2 class="text-2xl font-bold text-[#1F3864]">Vista de Procesos (Process View)</h2>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Dinámica de concurrencia, sincronización, control de aforo atómico de 8 cupos y contingencia presencial (QR y PIN).
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCode('code-procesos')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copiar Código Mermaid
+                        </button>
+                        <a href="https://mermaid.live" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3864] hover:bg-blue-900 text-white text-xs font-semibold rounded-md transition-colors">
+                            Abrir Mermaid Live ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Diagrama Renderizado -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-x-auto my-6">
+                    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Alumna as Alumna (App Movil)
+    participant Front as Frontend (Next.js)
+    participant API as Backend (Supabase API)
+    participant DB as PostgreSQL (Transaccion)
+    actor Docente as Docente (Panel)
+
+    Note over Alumna, DB: Proceso Concurrente de Agendamiento (Tope 8 Cupos)
+    Alumna->>Front: Selecciona clase presencial (viernes 18:00) y pulsa Reservar
+    Front->>API: POST /reservas {userId, claseId}
+    API->>DB: BEGIN TRANSACTION (Bloqueo atomico de fila)
+    DB->>DB: SELECT cupos_inscritos, cupo_maximo FROM clase WHERE id = 12
+    alt Cupos < 8 y sin reserva previa
+        DB->>DB: INSERT INTO reserva (id_usuario, id_clase, estado)
+        DB->>DB: UPDATE clase SET cupos_inscritos = cupos_inscritos + 1
+        DB->>API: COMMIT TRANSACTION (Operacion exitosa)
+        API-->>Front: HTTP 201 Creado {id_reserva: 104, cupos: 4/8}
+        Front-->>Alumna: Toast Reserva Confirmada y actualiza aforo a 4/8
+    else Aforo Completo (8/8) o Reserva Duplicada
+        DB->>API: ROLLBACK (Excepcion regla RN-01)
+        API-->>Front: HTTP 409 Conflicto {error: Cupos agotados}
+        Front-->>Alumna: Alerta Cupos Agotados (8/8)
+    end
+
+    Note over Alumna, Docente: Validacion Presencial con QR Dinamico o Contingencia
+    Alumna->>Front: Solicita Pase Digital en recepcion
+    Front->>Front: Genera token dinamico con hash y exp. 300s
+    Alumna->>Docente: Presenta codigo QR en recepcion
+    alt Camara fisica operativa en sala
+        Docente->>Front: Escanea QR con lector web (MediaDevices)
+        Front->>API: POST /asistencia/validar {token, metodo: qr_dinamico}
+        API->>DB: INSERT INTO asistencia (id_reserva, fecha, metodo)
+        API-->>Docente: Check verde Asistencia confirmada
+    else Falla de hardware o baja luz
+        Docente->>Front: Abre modal contingencia e ingresa PIN de 4 digitos
+        Front->>API: POST /asistencia/validar {id_reserva, pin, metodo: manual}
+        API->>DB: INSERT INTO asistencia (metodo: manual_profesor)
+        API-->>Docente: Check verde Asistencia manual validada
+    end
+                    </div>
+                </div>
+
+                <!-- Código Fuente para Copiar -->
+                <div class="mt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Código Mermaid (sequenceDiagram)</h3>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto"><code id="code-procesos">sequenceDiagram
+    autonumber
+    actor Alumna as Alumna (App Movil)
+    participant Front as Frontend (Next.js)
+    participant API as Backend (Supabase API)
+    participant DB as PostgreSQL (Transaccion)
+    actor Docente as Docente (Panel)
+
+    Note over Alumna, DB: Proceso Concurrente de Agendamiento (Tope 8 Cupos)
+    Alumna->>Front: Selecciona clase presencial (viernes 18:00) y pulsa Reservar
+    Front->>API: POST /reservas {userId, claseId}
+    API->>DB: BEGIN TRANSACTION (Bloqueo atomico de fila)
+    DB->>DB: SELECT cupos_inscritos, cupo_maximo FROM clase WHERE id = 12
+    alt Cupos < 8 y sin reserva previa
+        DB->>DB: INSERT INTO reserva (id_usuario, id_clase, estado)
+        DB->>DB: UPDATE clase SET cupos_inscritos = cupos_inscritos + 1
+        DB->>API: COMMIT TRANSACTION (Operacion exitosa)
+        API-->>Front: HTTP 201 Creado {id_reserva: 104, cupos: 4/8}
+        Front-->>Alumna: Toast Reserva Confirmada y actualiza aforo a 4/8
+    else Aforo Completo (8/8) o Reserva Duplicada
+        DB->>API: ROLLBACK (Excepcion regla RN-01)
+        API-->>Front: HTTP 409 Conflicto {error: Cupos agotados}
+        Front-->>Alumna: Alerta Cupos Agotados (8/8)
+    end
+
+    Note over Alumna, Docente: Validacion Presencial con QR Dinamico o Contingencia
+    Alumna->>Front: Solicita Pase Digital en recepcion
+    Front->>Front: Genera token dinamico con hash y exp. 300s
+    Alumna->>Docente: Presenta codigo QR en recepcion
+    alt Camara fisica operativa en sala
+        Docente->>Front: Escanea QR con lector web (MediaDevices)
+        Front->>API: POST /asistencia/validar {token, metodo: qr_dinamico}
+        API->>DB: INSERT INTO asistencia (id_reserva, fecha, metodo)
+        API-->>Docente: Check verde Asistencia confirmada
+    else Falla de hardware o baja luz
+        Docente->>Front: Abre modal contingencia e ingresa PIN de 4 digitos
+        Front->>API: POST /asistencia/validar {id_reserva, pin, metodo: manual}
+        API->>DB: INSERT INTO asistencia (metodo: manual_profesor)
+        API-->>Docente: Check verde Asistencia manual validada
+    end</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 4: VISTA FÍSICA -->
+        <section id="section-fisica" class="view-section space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold text-[#00B0F0] uppercase tracking-wider">Kruchten View 4</span>
+                        <h2 class="text-2xl font-bold text-[#1F3864]">Vista Física o de Despliegue (Physical View)</h2>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Distribución de hardware, servidores cloud, CDN en el borde y protocolos de comunicación seguros (TLS 1.3).
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCode('code-fisica')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copiar Código Mermaid
+                        </button>
+                        <a href="https://mermaid.live" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3864] hover:bg-blue-900 text-white text-xs font-semibold rounded-md transition-colors">
+                            Abrir Mermaid Live ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Diagrama Renderizado -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-x-auto my-6">
+                    <div class="mermaid">
+flowchart LR
+    subgraph ClientesDispositivos ["Nivel de Clientes (Dispositivos Fisicos)"]
+        MobileAlumna["Smartphone Alumna (Android / iOS)<br/>Navegador Web Mobile (PWA)"]
+        TabletDocente["Tablet / Smartphone Docente<br/>Camara Web Integrada"]
+        PCAdmin["Laptop / PC Administrador<br/>Navegador Web Desktop"]
+    end
+
+    subgraph RedCDN ["Nivel de Red y Borde (Edge Infrastructure)"]
+        DNS_SSL["Cloudflare / DNS<br/>Certificado TLS 1.3 / HTTPS"]
+        VercelEdge["Vercel Edge Network<br/>Distribucion CDN Global"]
+    end
+
+    subgraph ServidorAplicacion ["Nivel de Servidores de Aplicacion"]
+        NextServer["Next.js Application Server<br/>Node.js Runtime / Serverless Functions"]
+    end
+
+    subgraph PlataformaCloud ["Nivel de Datos y BaaS (Supabase Cloud)"]
+        PostgresInstance["Instancia PostgreSQL 15<br/>Dedicated Cloud Server (AWS us-east-1)<br/>Tables, RLS, Triggers, Views"]
+        AuthMicroservice["GoTrue Auth Service<br/>Manejo JWT / Sesiones HttpOnly"]
+        StorageCluster["Supabase Storage Engine<br/>Cluster S3 (Comprobantes bancarios)"]
+    end
+
+    MobileAlumna -->|HTTPS / Port 443| DNS_SSL
+    TabletDocente -->|HTTPS / Port 443| DNS_SSL
+    PCAdmin -->|HTTPS / Port 443| DNS_SSL
+
+    DNS_SSL --> VercelEdge
+    VercelEdge --> NextServer
+
+    NextServer -->|pg connection pooling / Port 5432 / 6543| PostgresInstance
+    NextServer -->|REST / HTTPS Port 443| AuthMicroservice
+    NextServer -->|REST / HTTPS Port 443| StorageCluster
+                    </div>
+                </div>
+
+                <!-- Código Fuente para Copiar -->
+                <div class="mt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Código Mermaid (flowchart LR)</h3>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto"><code id="code-fisica">flowchart LR
+    subgraph ClientesDispositivos ["Nivel de Clientes (Dispositivos Fisicos)"]
+        MobileAlumna["Smartphone Alumna (Android / iOS)<br/>Navegador Web Mobile (PWA)"]
+        TabletDocente["Tablet / Smartphone Docente<br/>Camara Web Integrada"]
+        PCAdmin["Laptop / PC Administrador<br/>Navegador Web Desktop"]
+    end
+
+    subgraph RedCDN ["Nivel de Red y Borde (Edge Infrastructure)"]
+        DNS_SSL["Cloudflare / DNS<br/>Certificado TLS 1.3 / HTTPS"]
+        VercelEdge["Vercel Edge Network<br/>Distribucion CDN Global"]
+    end
+
+    subgraph ServidorAplicacion ["Nivel de Servidores de Aplicacion"]
+        NextServer["Next.js Application Server<br/>Node.js Runtime / Serverless Functions"]
+    end
+
+    subgraph PlataformaCloud ["Nivel de Datos y BaaS (Supabase Cloud)"]
+        PostgresInstance["Instancia PostgreSQL 15<br/>Dedicated Cloud Server (AWS us-east-1)<br/>Tables, RLS, Triggers, Views"]
+        AuthMicroservice["GoTrue Auth Service<br/>Manejo JWT / Sesiones HttpOnly"]
+        StorageCluster["Supabase Storage Engine<br/>Cluster S3 (Comprobantes bancarios)"]
+    end
+
+    MobileAlumna -->|HTTPS / Port 443| DNS_SSL
+    TabletDocente -->|HTTPS / Port 443| DNS_SSL
+    PCAdmin -->|HTTPS / Port 443| DNS_SSL
+
+    DNS_SSL --> VercelEdge
+    VercelEdge --> NextServer
+
+    NextServer -->|pg connection pooling / Port 5432 / 6543| PostgresInstance
+    NextServer -->|REST / HTTPS Port 443| AuthMicroservice
+    NextServer -->|REST / HTTPS Port 443| StorageCluster</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 5: ESCENARIOS (+1) -->
+        <section id="section-escenarios" class="view-section space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold text-[#00B0F0] uppercase tracking-wider">Kruchten The &quot;+1&quot; View</span>
+                        <h2 class="text-2xl font-bold text-[#1F3864]">Escenarios / Casos de Uso (The &quot;+1&quot; View)</h2>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Unifica las 4 vistas arquitectónicas mediante los casos de uso esenciales del negocio para Alumna, Docente y Administrador.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyCode('code-escenarios')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            Copiar Código Mermaid
+                        </button>
+                        <a href="https://mermaid.live" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F3864] hover:bg-blue-900 text-white text-xs font-semibold rounded-md transition-colors">
+                            Abrir Mermaid Live ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Diagrama Renderizado -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-x-auto my-6">
+                    <div class="mermaid">
+flowchart LR
+    Alumna((Alumna))
+    Profesor((Profesor))
+    Admin((Administrador))
+
+    subgraph Sistema ["Sistema Web Integral Cuerpo y Alma"]
+        CU01["CU-01: Autenticarse e iniciar sesion"]
+        CU02["CU-02: Consultar agenda y reservar clase (Tope 8 cupos)"]
+        CU03["CU-03: Cancelar reserva (Regla 4 horas)"]
+        CU04["CU-04: Generar Pase QR dinamico (300s)"]
+        CU05["CU-05: Consultar nomina de participantes por clase"]
+        CU06["CU-06: Validar asistencia presencial por escaner QR"]
+        CU07["CU-07: Validar asistencia manual con PIN docente"]
+        CU08["CU-08: Cargar comprobante de pago por transferencia"]
+        CU09["CU-09: Conciliar y aprobar pagos de membresias"]
+        CU10["CU-10: Crear y eliminar clases en cascada (deleteCascade)"]
+    end
+
+    Alumna --> CU01
+    Alumna --> CU02
+    Alumna --> CU03
+    Alumna --> CU04
+    Alumna --> CU08
+
+    Profesor --> CU01
+    Profesor --> CU05
+    Profesor --> CU06
+    Profesor --> CU07
+
+    Admin --> CU01
+    Admin --> CU09
+    Admin --> CU10
+
+    CU02 -.->|include| CU01
+    CU06 -.->|extend| CU07
+    CU09 -.->|actualiza creditos| CU02
+                    </div>
+                </div>
+
+                <!-- Código Fuente para Copiar -->
+                <div class="mt-4">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Código Mermaid (flowchart LR)</h3>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-xs overflow-x-auto"><code id="code-escenarios">flowchart LR
+    Alumna((Alumna))
+    Profesor((Profesor))
+    Admin((Administrador))
+
+    subgraph Sistema ["Sistema Web Integral Cuerpo y Alma"]
+        CU01["CU-01: Autenticarse e iniciar sesion"]
+        CU02["CU-02: Consultar agenda y reservar clase (Tope 8 cupos)"]
+        CU03["CU-03: Cancelar reserva (Regla 4 horas)"]
+        CU04["CU-04: Generar Pase QR dinamico (300s)"]
+        CU05["CU-05: Consultar nomina de participantes por clase"]
+        CU06["CU-06: Validar asistencia presencial por escaner QR"]
+        CU07["CU-07: Validar asistencia manual con PIN docente"]
+        CU08["CU-08: Cargar comprobante de pago por transferencia"]
+        CU09["CU-09: Conciliar y aprobar pagos de membresias"]
+        CU10["CU-10: Crear y eliminar clases en cascada (deleteCascade)"]
+    end
+
+    Alumna --> CU01
+    Alumna --> CU02
+    Alumna --> CU03
+    Alumna --> CU04
+    Alumna --> CU08
+
+    Profesor --> CU01
+    Profesor --> CU05
+    Profesor --> CU06
+    Profesor --> CU07
+
+    Admin --> CU01
+    Admin --> CU09
+    Admin --> CU10
+
+    CU02 -.->|include| CU01
+    CU06 -.->|extend| CU07
+    CU09 -.->|actualiza creditos| CU02</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        Duoc UC · Escuela de Informática y Telecomunicaciones · Proyecto Capstone 2026
+    </footer>
+
+    <!-- Script de Control de Pestañas y Copiado -->
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-[#1F3864]', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeSection = document.getElementById('section-' + tabId);
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            if (activeSection) activeSection.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.classList.add('bg-[#1F3864]', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            }
+        }
+
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('¡Código Mermaid copiado al portapapeles!');
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+            });
+        }
+    </script>
+</body>
+</html>
