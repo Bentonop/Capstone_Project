@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1655.628 599.6" width="1655.628" height="599.6" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="Sistema" data-label="Sistema Web Integral Cuerpo y Alma">
+  <rect x="233" y="40" width="1382.628" height="519.6" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="233" y="40" width="1382.628" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="245" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">Sistema Web Integral Cuerpo y Alma</text>
+</g>
+<polyline class="edge" data-from="Alumna" data-to="CU01" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="160,136.11666666666667 211.632125,136.11666666666667 211.632125,354.55 1353.903,354.55" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Alumna" data-to="CU02" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="160,136.11666666666667 211.632125,136.11666666666667 211.632125,272.66 834.696,272.66" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Alumna" data-to="CU03" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="160,136.11666666666667 211.632125,136.11666666666667 211.632125,233.40000000000003 263.26425,233.40000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Alumna" data-to="CU04" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="160,136.11666666666667 211.632125,136.11666666666667 211.632125,102.45 263.26425,102.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Alumna" data-to="CU08" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="160,136.11666666666667 211.632125,136.11666666666667 211.632125,160.34999999999997 263.26425,160.34999999999997" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Profesor" data-to="CU01" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="170,331.6 216.632125,331.6 216.632125,354.55 1353.903,354.55" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Profesor" data-to="CU05" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="170,331.6 216.632125,331.6 216.632125,384.35 263.26425,384.35" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Profesor" data-to="CU06" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="170,331.6 216.632125,331.6 216.632125,298.3 263.26425,298.3" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Profesor" data-to="CU07" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="170,331.6 216.632125,331.6 216.632125,207.76 834.696,207.76" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Admin" data-to="CU01" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="198,485.6666666666667 230.632125,485.6666666666667 230.632125,354.55 1353.903,354.55" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Admin" data-to="CU09" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="198,485.6666666666667 230.632125,485.6666666666667 230.632125,514.1500000000001 263.26425,514.1500000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Admin" data-to="CU10" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="198,485.6666666666667 230.632125,485.6666666666667 230.632125,449.25000000000006 263.26425,449.25000000000006" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CU02" data-to="CU01" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="include" points="1213.801,272.66 1329.903,272.66 1329.903,350.86 1353.903,350.86" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CU06" data-to="CU07" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="extend" points="614.2112500000001,298.3 798.696,298.3 798.696,201.61 834.696,201.61" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CU09" data-to="CU02" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="actualiza creditos" points="590.4992500000001,514.1500000000001 822.696,514.1500000000001 822.696,278.81000000000006 834.696,278.81000000000006" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="CU02" data-to="CU01" data-label="include">
+  <rect x="1257.801" y="256.6600000000001" width="52.102" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1283.8519999999999" y="271.81000000000006" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">include</text>
+</g>
+<g class="edge-label" data-from="CU06" data-to="CU07" data-label="extend">
+  <rect x="703.1309999999999" y="282.3" width="49.726000000000006" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="727.9939999999999" y="297.45" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">extend</text>
+</g>
+<g class="edge-label" data-from="CU09" data-to="CU02" data-label="actualiza creditos">
+  <rect x="677.2919999999999" y="498.15" width="101.40400000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="727.9939999999999" y="513.3" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">actualiza creditos</text>
+</g>
+<g class="node" data-id="Alumna" data-label="Alumna" data-shape="circle">
+  <circle cx="109.5" cy="136.11666666666667" r="50.5" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="109.5" y="136.11666666666667" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Alumna</text>
+</g>
+<g class="node" data-id="Profesor" data-label="Profesor" data-shape="circle">
+  <circle cx="114.5" cy="331.6" r="55.5" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="114.5" y="331.6" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Profesor</text>
+</g>
+<g class="node" data-id="Admin" data-label="Administrador" data-shape="circle">
+  <circle cx="128.5" cy="485.6666666666667" r="69.5" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="128.5" y="485.6666666666667" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Administrador</text>
+</g>
+<g class="node" data-id="CU01" data-label="CU-01: Autenticarse e iniciar sesion" data-shape="rectangle">
+  <rect x="1353.903" y="336.1" width="245.72499999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1476.7655" y="354.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-01: Autenticarse e iniciar sesion</text>
+</g>
+<g class="node" data-id="CU02" data-label="CU-02: Consultar agenda y reservar clase (Tope 8 cupos)" data-shape="rectangle">
+  <rect x="834.696" y="254.21000000000004" width="379.10499999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1024.2485" y="272.66" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-02: Consultar agenda y reservar clase (Tope 8 cupos)</text>
+</g>
+<g class="node" data-id="CU03" data-label="CU-03: Cancelar reserva (Regla 4 horas)" data-shape="rectangle">
+  <rect x="263.26425" y="214.95000000000005" width="280.552" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="403.54025" y="233.40000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-03: Cancelar reserva (Regla 4 horas)</text>
+</g>
+<g class="node" data-id="CU04" data-label="CU-04: Generar Pase QR dinamico (300s)" data-shape="rectangle">
+  <rect x="263.26425" y="84" width="280.552" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="403.54025" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-04: Generar Pase QR dinamico (300s)</text>
+</g>
+<g class="node" data-id="CU05" data-label="CU-05: Consultar nomina de participantes por clase" data-shape="rectangle">
+  <rect x="263.26425" y="365.90000000000003" width="339.0909999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="432.80974999999995" y="384.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-05: Consultar nomina de participantes por clase</text>
+</g>
+<g class="node" data-id="CU06" data-label="CU-06: Validar asistencia presencial por escaner QR" data-shape="rectangle">
+  <rect x="263.26425" y="279.85" width="350.947" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="438.73775" y="298.3" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-06: Validar asistencia presencial por escaner QR</text>
+</g>
+<g class="node" data-id="CU07" data-label="CU-07: Validar asistencia manual con PIN docente" data-shape="rectangle">
+  <rect x="834.696" y="189.31" width="330.19899999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="999.7955" y="207.76" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-07: Validar asistencia manual con PIN docente</text>
+</g>
+<g class="node" data-id="CU08" data-label="CU-08: Cargar comprobante de pago por transferencia" data-shape="rectangle">
+  <rect x="263.26425" y="141.89999999999998" width="359.83899999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="443.18375" y="160.34999999999997" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-08: Cargar comprobante de pago por transferencia</text>
+</g>
+<g class="node" data-id="CU09" data-label="CU-09: Conciliar y aprobar pagos de membresias" data-shape="rectangle">
+  <rect x="263.26425" y="495.70000000000005" width="327.235" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="426.88175" y="514.1500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-09: Conciliar y aprobar pagos de membresias</text>
+</g>
+<g class="node" data-id="CU10" data-label="CU-10: Crear y eliminar clases en cascada (deleteCascade)" data-shape="rectangle">
+  <rect x="263.26425" y="430.80000000000007" width="384.292" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="455.41025" y="449.25000000000006" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">CU-10: Crear y eliminar clases en cascada (deleteCascade)</text>
+</g>
+</svg>

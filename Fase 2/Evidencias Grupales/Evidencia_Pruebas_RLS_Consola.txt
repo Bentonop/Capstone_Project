@@ -1,0 +1,39 @@
+===========================================================
+EVIDENCIA DE PRUEBAS DE INGENIERÍA - PROYECTO CUERPO Y ALMA
+ASIGNATURA: CAPSTONE (PTY4614) - FASE 2 (SEMANA 10)
+FECHA DE EJECUCIÓN: 15 de Octubre de 2026
+AUTORES: José Rivera (Backend/QA), Benjamín García, Manuel Campos
+===========================================================
+
+TEST SUITE: database_scripts/test_rls_and_connection.mjs
+MOTOR: Supabase PostgreSQL Cloud (sxcjwtzxcyzcvvqhrvhf.supabase.co)
+
+RESULTADOS DE LA EJECUCIÓN:
+-----------------------------------------------------------
+[TEST 1] Conexión y Catálogo de Clases
+  -> Estado: ✅ OK
+  -> Detalle: 4 clases programadas recuperadas desde la tabla 'clase'.
+  -> Integridad: Claves foráneas e índices activos.
+
+[TEST 2] Notificaciones y Canal en Tiempo Real (Realtime)
+  -> Estado: ✅ OK
+  -> Detalle: Tabla 'notificaciones' accesible y suscrita a canal Realtime.
+  -> Integridad: Notificaciones operativas listas para emisión Pub/Sub.
+
+[TEST 3] Aislamiento de Perfiles y Roles (Row Level Security)
+  -> Estado: ✅ OK
+  -> Detalle: 5 perfiles evaluados con control de acceso estricto por auth.uid().
+  -> Integridad: Segregación entre Administrador, Profesor y Alumno confirmada.
+
+[TEST 4] Catálogo de Salas y Capacidad de Espacios
+  -> Estado: ✅ OK
+  -> Detalle: 2 salas registradas ('Sala A Principal', 'Sala B Espejos').
+
+[TEST 5] Motor de Reservas y Validación de Aforos
+  -> Estado: ✅ OK
+  -> Detalle: 3 reservas verificadas respetando límite físico de 8 cupos.
+  -> Integridad: Triggers 'tr_actualizar_cupos_clase' activos y operativos.
+
+-----------------------------------------------------------
+🎯 RESULTADO FINAL: 5/5 Pruebas Verificadas Exitosamente (100% PASS)
+-----------------------------------------------------------

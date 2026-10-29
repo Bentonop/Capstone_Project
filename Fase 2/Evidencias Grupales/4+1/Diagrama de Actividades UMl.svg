@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120.9480833333332 1024.625" width="1120.9480833333332" height="1024.625" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="Inicio" data-to="A1" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="475.06533333333334,249.83200000000002 475.06533333333334,285.83200000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A1" data-to="A2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="475.06533333333334,322.7320000000001 475.06533333333334,346.7320000000001 331.9043333333333,346.7320000000001 331.9043333333333,370.732" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A2" data-to="A3" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="331.9043333333333,407.632 331.9043333333333,455.63199999999995 299.1586666666666,455.63199999999995 299.1586666666666,455.632" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A3" data-to="D1" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="169.57933333333335,455.632 169.57933333333335,455.63199999999995 52.287333333333436,455.63199999999995 52.287333333333436,217.532 167.61350000000016,217.532 167.61350000000016,146.14900000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D1" data-to="E1" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="No (Agotado)" points="202.99650000000008,181.53199999999995 202.99650000000008,217.532 188.74333333333334,217.532 188.74333333333345,285.83200000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="E1" data-to="A2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="188.7433333333334,322.7320000000001 188.7433333333334,346.7320000000001 331.9043333333333,346.7320000000001 331.9043333333333,370.732" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D1" data-to="A4" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Si (Disponible)" points="238.37950000000012,146.14900000000003 238.37950000000012,193.5320000000001 793.2503333333333,193.5320000000001 793.2503333333333,285.83200000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A4" data-to="A5" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="793.2503333333333,322.732 793.2503333333333,370.732" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A5" data-to="A6" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="793.2503333333333,407.632 793.2503333333333,455.632" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A6" data-to="D2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="793.2503333333333,492.532 793.2503333333333,528.5320000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D2" data-to="C1" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="No (Falla luz/camara)" points="767.0681666666666,659.4428333333334 767.0681666666666,697.625 640.2710833333333,697.625 640.2710833333333,777.925" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D2" data-to="C2" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Si (Operativo)" points="819.4324999999999,659.4428333333333 819.4324999999999,697.625 946.2295833333333,697.625 946.2295833333333,777.925" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="C1" data-to="A7" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="640.2710833333333,814.8249999999999 640.2710833333333,838.8249999999999 793.2503333333333,838.8249999999999 793.2503333333333,862.8249999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="C2" data-to="A7" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="946.2295833333333,814.8249999999999 946.2295833333333,838.8249999999999 793.2503333333333,838.8249999999999 793.2503333333333,862.8249999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A7" data-to="Fin" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="793.2503333333333,899.7249999999999 793.2503333333333,947.7249999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="D1" data-to="E1" data-label="No (Agotado)">
+  <rect x="149.74333333333334" y="224.532" width="77.644" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="188.56533333333334" y="239.68200000000002" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">No (Agotado)</text>
+</g>
+<g class="edge-label" data-from="D1" data-to="A4" data-label="Si (Disponible)">
+  <rect x="750.7503333333333" y="200.5320000000001" width="84.77200000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="793.1363333333333" y="215.6820000000001" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Si (Disponible)</text>
+</g>
+<g class="edge-label" data-from="D2" data-to="C1" data-label="No (Falla luz/camara)">
+  <rect x="581.7710833333333" y="704.625" width="116.84800000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="640.1950833333333" y="719.775" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">No (Falla luz/camara)</text>
+</g>
+<g class="edge-label" data-from="D2" data-to="C2" data-label="Si (Operativo)">
+  <rect x="905.2295833333333" y="704.625" width="81.20800000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="945.8335833333333" y="719.775" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Si (Operativo)</text>
+</g>
+<g class="node" data-id="Inicio" data-label="Inicio" data-shape="stadium">
+  <rect x="438.52933333333334" y="212.93200000000002" width="73.072" height="36.900000000000006" rx="18.450000000000003" ry="18.450000000000003" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="475.06533333333334" y="231.382" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Inicio</text>
+</g>
+<g class="node" data-id="A1" data-label="Alumna inicia sesion con credenciales" data-shape="rectangle">
+  <rect x="342.19933333333336" y="285.83200000000005" width="265.73199999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="475.06533333333334" y="304.28200000000004" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Alumna inicia sesion con credenciales</text>
+</g>
+<g class="node" data-id="A2" data-label="Explora el catalogo semanal de clases de Pole Dance" data-shape="rectangle">
+  <rect x="156.06033333333335" y="370.732" width="351.68799999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="331.9043333333333" y="389.182" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Explora el catalogo semanal de clases de Pole Dance</text>
+</g>
+<g class="node" data-id="A3" data-label="Selecciona horario presencial disponible y pulsa Reservar" data-shape="rectangle">
+  <rect x="40" y="455.632" width="388.73799999999983" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="234.36899999999991" y="474.082" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Selecciona horario presencial disponible y pulsa Reservar</text>
+</g>
+<g class="node" data-id="D1" data-label="Hay cupos
+disponibles?
+Tope 8" data-shape="diamond">
+  <polygon points="202.99650000000014,40 273.76250000000016,110.766 202.99650000000014,181.532 132.23050000000012,110.766" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="202.99650000000014" y="110.766" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="202.99650000000014" dy="-12.350000000000001">Hay cupos</tspan><tspan x="202.99650000000014" dy="16.900000000000002">disponibles?</tspan><tspan x="202.99650000000014" dy="16.900000000000002">Tope 8</tspan></text>
+</g>
+<g class="node" data-id="E1" data-label="Muestra alerta: Cupos Agotados 8/8" data-shape="rectangle">
+  <rect x="63.287333333333436" y="285.83200000000005" width="250.91199999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="188.7433333333334" y="304.28200000000004" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Muestra alerta: Cupos Agotados 8/8</text>
+</g>
+<g class="node" data-id="A4" data-label="Sistema descuenta 1 credito y confirma reserva" data-shape="rectangle">
+  <rect x="635.9313333333333" y="285.83200000000005" width="314.638" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333333" y="304.28200000000004" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Sistema descuenta 1 credito y confirma reserva</text>
+</g>
+<g class="node" data-id="A5" data-label="Dia de clase: Alumna genera Pase QR Dinamico" data-shape="rectangle">
+  <rect x="635.5608333333333" y="370.732" width="315.37899999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333333" y="389.182" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Dia de clase: Alumna genera Pase QR Dinamico</text>
+</g>
+<g class="node" data-id="A6" data-label="Presenta codigo QR en recepcion de la academia" data-shape="rectangle">
+  <rect x="629.6328333333333" y="455.632" width="327.23499999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333333" y="474.082" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Presenta codigo QR en recepcion de la academia</text>
+</g>
+<g class="node" data-id="D2" data-label="Camara del
+profesor puede
+escanear QR?" data-shape="diamond">
+  <polygon points="793.2503333333332,528.5320000000002 871.7968333333331,607.0785000000001 793.2503333333332,685.625 714.7038333333333,607.0785000000001" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333332" y="607.0785000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="793.2503333333332" dy="-12.350000000000001">Camara del</tspan><tspan x="793.2503333333332" dy="16.900000000000002">profesor puede</tspan><tspan x="793.2503333333332" dy="16.900000000000002">escanear QR?</tspan></text>
+</g>
+<g class="node" data-id="C1" data-label="Profesor abre modal e ingresa PIN manual" data-shape="rectangle">
+  <rect x="497.0310833333334" y="777.925" width="286.4799999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="640.2710833333333" y="796.375" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Profesor abre modal e ingresa PIN manual</text>
+</g>
+<g class="node" data-id="C2" data-label="Profesor escanea el QR con la app web" data-shape="rectangle">
+  <rect x="811.5110833333333" y="777.925" width="269.43699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="946.2295833333333" y="796.375" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Profesor escanea el QR con la app web</text>
+</g>
+<g class="node" data-id="A7" data-label="Sistema registra asistencia y bloquea reuso" data-shape="rectangle">
+  <rect x="644.4528333333333" y="862.8249999999999" width="297.59499999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333333" y="881.275" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Sistema registra asistencia y bloquea reuso</text>
+</g>
+<g class="node" data-id="Fin" data-label="Fin: Alumna ingresa a la sala" data-shape="stadium">
+  <rect x="689.6538333333333" y="947.7249999999999" width="207.19299999999998" height="36.900000000000006" rx="18.450000000000003" ry="18.450000000000003" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="793.2503333333333" y="966.175" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Fin: Alumna ingresa a la sala</text>
+</g>
+<g class="node" data-id="class" data-label="class" data-shape="rectangle">
+  <rect x="301.76250000000005" y="144.6320000000001" width="74.554" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="339.03950000000003" y="163.0820000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">class</text>
+</g>
+</svg>

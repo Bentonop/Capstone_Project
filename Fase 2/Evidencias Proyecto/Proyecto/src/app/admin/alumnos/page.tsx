@@ -1,0 +1,900 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+
+interface Profile {
+  id: string;
+  name: string;
+  last_name: string;
+  rut: string | null;
+  phone: string;
+  correo: string | null;
+  active: boolean;
+  role: string;
+  contacto_emergencia?: string | null;
+  condicion_medica?: string | null;
+  created_at: string;
+}
+
+interface PagoPendiente {
+  id: string;
+  suscripcion_id: string;
+  monto: number;
+  metodo_pago: string;
+  comprobante_url: string;
+  estado: string;
+  fecha_pago: string;
+  user_id: string;
+  profile?: Profile;
+  plan?: { nombre_plan: string, creditos_clases: number };
+}
+
+interface PlanHistorial {
+  id: string;
+  nombre: string;
+  estado: string;
+  fechaInicio: string;
+  fechaFin: string | null;
+  creditosRestantes: number;
+  precio: number | null;
+  pagoEstado: string | null;
+  metodoPago: string | null;
+}
+
+interface DetalleClaseHistorial {
+  nombre_clase: string;
+  fecha_hora_inicio: string;
+  fecha_hora_fin: string;
+  sala: string | null;
+  estado_clase: string | null;
+}
+
+interface ClaseHistorial {
+  id_reserva: number;
+  fecha_operacion: string;
+  estado_reserva: string;
+  clase: DetalleClaseHistorial | null;
+}
+
+function formatHistoryDate(value: string | null, includeTime = false) {
+  if (!value) return "Sin fecha";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Sin fecha";
+
+  return new Intl.DateTimeFormat("es-CL", includeTime
+    ? { dateStyle: "medium", timeStyle: "short" }
+    : { dateStyle: "medium" }
+  ).format(date);
+}
+
+export default function AdminAlumnosPage() {
+  const [activeTab, setActiveTab] = useState<"alumnos" | "pagos">("alumnos");
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const [alumnos, setAlumnos] = useState<Profile[]>([]);
+  const [pagos, setPagos] = useState<PagoPendiente[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const [invitaciones, setInvitaciones] = useState<any[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
+  // Ficha Medica Edit Modal State
+  const [editingAlumno, setEditingAlumno] = useState<Profile | null>(null);
+  const [editEmergencia, setEditEmergencia] = useState("");
+  const [editFicha, setEditFicha] = useState("");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [alumnoHistorial, setAlumnoHistorial] = useState<Profile | null>(null);
+  const [historialPlanes, setHistorialPlanes] = useState<PlanHistorial[]>([]);
+  const [historialClases, setHistorialClases] = useState<ClaseHistorial[]>([]);
+  const [isLoadingHistorial, setIsLoadingHistorial] = useState(false);
+  const [historialError, setHistorialError] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const normalizedSearch = searchTerm
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const compactSearch = normalizedSearch.replace(/[^a-z0-9]/g, "");
+  const filteredAlumnos = alumnos.filter(alumno => {
+    if (!normalizedSearch) return true;
+
+    const searchableText = `${alumno.name} ${alumno.last_name} ${alumno.correo || ""}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    const compactRut = (alumno.rut || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    return searchableText.includes(normalizedSearch) || compactRut.includes(compactSearch);
+  });
+  const filteredInvitaciones = invitaciones.filter(invite =>
+    !normalizedSearch || invite.correo?.toLowerCase().includes(normalizedSearch)
+  );
+
+  async function fetchAlumnos() {
+    try {
+      setIsLoading(true);
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "alumno")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setAlumnos(data || []);
+    } catch (error) {
+      console.error("Error fetching alumnos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const fetchInvitaciones = useCallback(async () => {
+    if (!supabase) return;
+    const [{ data: invites, error: invitesError }, { data: profiles, error: profilesError }] = await Promise.all([
+      supabase.from("roles_whitelist").select("*").eq("rol_asignado", "alumno"),
+      supabase.from("profiles").select("correo")
+    ]);
+
+    if (invitesError || profilesError) {
+      console.error("Error al consultar invitaciones pendientes:", invitesError || profilesError);
+      return;
+    }
+
+    const registeredEmails = new Set(
+      (profiles || [])
+        .map(profile => profile.correo?.trim().toLowerCase())
+        .filter((email): email is string => Boolean(email))
+    );
+
+    setInvitaciones((invites || []).filter(invite => !registeredEmails.has(invite.correo?.trim().toLowerCase())));
+  }, []);
+
+  const abrirHistorial = async (alumno: Profile) => {
+    setAlumnoHistorial(alumno);
+    setHistorialPlanes([]);
+    setHistorialClases([]);
+    setHistorialError(null);
+    setIsLoadingHistorial(true);
+
+    try {
+      const [subscriptionsResult, paymentsResult, reservationsResult] = await Promise.all([
+        supabase.from("user_suscripciones").select("*").eq("user_id", alumno.id).order("fecha_inicio", { ascending: false }),
+        supabase.from("user_pagos").select("*").eq("user_id", alumno.id).order("fecha_pago", { ascending: false }),
+        supabase.from("reserva").select(`
+          id_reserva,
+          fecha_operacion,
+          estado_reserva,
+          clase:clase (
+            nombre_clase,
+            fecha_hora_inicio,
+            fecha_hora_fin,
+            sala,
+            estado_clase
+          )
+        `).eq("id_usuario", alumno.id).order("fecha_operacion", { ascending: false })
+      ]);
+
+      if (subscriptionsResult.error || paymentsResult.error || reservationsResult.error) {
+        throw subscriptionsResult.error || paymentsResult.error || reservationsResult.error;
+      }
+
+      const subscriptions = (subscriptionsResult.data || []) as {
+        id: string;
+        plan_id: string;
+        estado: string;
+        fecha_inicio: string;
+        fecha_fin: string | null;
+        creditos_restantes: number;
+      }[];
+      const payments = (paymentsResult.data || []) as {
+        suscripcion_id: string;
+        monto: number;
+        estado: string;
+        metodo_pago: string;
+      }[];
+      const reservations = (reservationsResult.data || []) as (Omit<ClaseHistorial, "clase"> & {
+        clase: DetalleClaseHistorial | DetalleClaseHistorial[] | null;
+      })[];
+
+      const planIds = Array.from(new Set(subscriptions.map(subscription => subscription.plan_id)));
+      let plans: { id_plan: string; nombre_plan: string; precio: number }[] = [];
+      if (planIds.length > 0) {
+        const { data, error } = await supabase
+          .from("planes")
+          .select("id_plan, nombre_plan, precio")
+          .in("id_plan", planIds);
+        if (error) throw error;
+        plans = (data || []) as typeof plans;
+      }
+
+      setHistorialPlanes(subscriptions.map(subscription => {
+        const plan = plans.find(item => item.id_plan === subscription.plan_id);
+        const payment = payments.find(item => item.suscripcion_id === subscription.id);
+        return {
+          id: subscription.id,
+          nombre: plan?.nombre_plan || "Plan no disponible",
+          estado: subscription.estado,
+          fechaInicio: subscription.fecha_inicio,
+          fechaFin: subscription.fecha_fin,
+          creditosRestantes: subscription.creditos_restantes,
+          precio: payment?.monto ?? plan?.precio ?? null,
+          pagoEstado: payment?.estado ?? null,
+          metodoPago: payment?.metodo_pago ?? null
+        };
+      }));
+      setHistorialClases(reservations
+        .map(reservation => ({
+          ...reservation,
+          clase: Array.isArray(reservation.clase) ? reservation.clase[0] || null : reservation.clase
+        }))
+        .filter((reservation): reservation is ClaseHistorial => reservation.clase !== null));
+    } catch (error) {
+      console.error("Error al cargar el historial del alumno:", error);
+      setHistorialError("No se pudo cargar el historial. Revisa los permisos de lectura en Supabase.");
+    } finally {
+      setIsLoadingHistorial(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "alumnos") {
+      fetchAlumnos();
+      fetchInvitaciones();
+    }
+    else fetchPagos();
+  }, [activeTab, fetchInvitaciones]);
+
+  useEffect(() => {
+    if (activeTab !== "alumnos") return;
+
+    const refreshInvitaciones = () => void fetchInvitaciones();
+    const intervalId = window.setInterval(refreshInvitaciones, 15000);
+    window.addEventListener("focus", refreshInvitaciones);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshInvitaciones);
+    };
+  }, [activeTab, fetchInvitaciones]);
+
+  const handleInvitar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase || !inviteEmail.trim()) return;
+    
+    const emailLower = inviteEmail.trim().toLowerCase();
+
+    // Check if it's already in the whitelist
+    const { data: existingInvite } = await supabase
+      .from("roles_whitelist")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingInvite) {
+      alert("Error: Este correo ya tiene una invitación pendiente.");
+      return;
+    }
+
+    // Check if it's already an active account in profiles
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("correo")
+      .eq("correo", emailLower)
+      .maybeSingle();
+
+    if (existingProfile) {
+      alert("Error: Este correo ya tiene una cuenta registrada en la plataforma.");
+      return;
+    }
+
+    // Generate a random 6-digit code
+    const codigoInvitacion = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const { error } = await supabase.from("roles_whitelist").insert([{ 
+      correo: inviteEmail.trim().toLowerCase(), 
+      rol_asignado: "alumno",
+      codigo_invitacion: codigoInvitacion 
+    }]);
+    
+    if (error) {
+      alert("Error al invitar. Quizás el correo ya está invitado.");
+    } else {
+      showToast(`Invitación enviada. Enviando correo...`);
+      
+      // Call our API to send the email via Resend
+      try {
+        await fetch('/api/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: inviteEmail.trim().toLowerCase(),
+            role: "alumno",
+            code: codigoInvitacion
+          })
+        });
+        showToast("¡Correo enviado con éxito!");
+      } catch (e) {
+        console.error("No se pudo enviar el correo", e);
+        showToast("Error al enviar el correo, pero el código es válido.");
+      }
+
+      setInviteEmail("");
+      setIsInviteModalOpen(false);
+      fetchInvitaciones();
+    }
+  };
+
+  const handleCancelarInvitacion = async (correo: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Cancelar la invitación a ${correo}?`)) return;
+    await supabase.from("roles_whitelist").delete().eq("correo", correo);
+    fetchInvitaciones();
+  };
+
+  async function fetchPagos() {
+    try {
+      setIsLoading(true);
+      if (!supabase) return;
+      
+      // Fetch pagos pendientes
+      const { data: pagosData, error: pagosError } = await supabase
+        .from("user_pagos")
+        .select("*")
+        .eq("estado", "pendiente")
+        .order("fecha_pago", { ascending: true });
+        
+      if (pagosError) throw pagosError;
+      
+      // For each pago, fetch user info and plan info
+      // In a real app this would be a join, doing it simply here for prototype
+      const pagosEnriched = await Promise.all((pagosData || []).map(async (pago: any) => {
+        const { data: profile } = await supabase!.from("profiles").select("*").eq("id", pago.user_id).single();
+        
+        // get suscripcion to get plan
+        const { data: suscripcion } = await supabase!.from("user_suscripciones").select("plan_id").eq("id", pago.suscripcion_id).single();
+        let plan = null;
+        if (suscripcion) {
+           const { data: planData } = await supabase!.from("planes").select("nombre_plan, creditos_clases").eq("id_plan", suscripcion.plan_id).single();
+           plan = planData;
+        }
+        
+        return { ...pago, profile, plan };
+      }));
+
+      setPagos(pagosEnriched);
+    } catch (error) {
+      console.error("Error fetching pagos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ active: !currentStatus }).eq("id", id);
+      if (error) throw error;
+      fetchAlumnos(); // refresh
+    } catch (error) {
+      console.error("Error toggling status", error);
+    }
+  };
+
+  const handleDeleteAlumno = async (id: string, name: string) => {
+    if (!supabase) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar la cuenta del alumno ${name}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ role: "eliminado" }).eq("id", id);
+      if (error) throw error;
+      showToast("Cuenta eliminada con éxito.");
+      fetchAlumnos();
+    } catch (error) {
+      console.error("Error eliminando alumno", error);
+      alert("Error al eliminar la cuenta del alumno.");
+    }
+  };
+
+  const procesarPago = async (pago: PagoPendiente, action: "aprobado" | "rechazado") => {
+    if (!supabase) return;
+    try {
+      // 1. Update pago status
+      const { error: pagoError } = await supabase.from("user_pagos").update({ estado: action }).eq("id", pago.id);
+      if (pagoError) throw pagoError;
+      
+      // 2. If approved, update suscripcion status and add credits
+      if (action === "aprobado") {
+         const { data: currentSus } = await supabase.from("user_suscripciones").select("creditos_restantes").eq("id", pago.suscripcion_id).single();
+         const currentCredits = currentSus?.creditos_restantes || 0;
+         const newCredits = pago.plan?.creditos_clases || 0;
+
+         const { error: susError } = await supabase.from("user_suscripciones").update({
+           estado: "activa",
+           creditos_restantes: currentCredits + newCredits
+         }).eq("id", pago.suscripcion_id);
+         if (susError) throw susError;
+      }
+      
+      // 3. Refresh
+      alert(`Pago ${action} con éxito.`);
+      fetchPagos();
+    } catch (error) {
+      console.error("Error procesando pago", error);
+      alert("Error procesando el pago. Verifica las tablas.");
+    }
+  };
+
+  const handleSaveFicha = async () => {
+    if (!supabase || !editingAlumno) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          contacto_emergencia: editEmergencia,
+          condicion_medica: editFicha
+        })
+        .eq("id", editingAlumno.id);
+      
+      if (error) throw error;
+      showToast("Ficha médica actualizada con éxito.");
+      setEditingAlumno(null);
+      fetchAlumnos(); // refresh
+    } catch (error) {
+      console.error("Error updating ficha", error);
+      alert("Error al actualizar la ficha médica.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full pb-10 min-h-screen bg-surface">
+      <header className="pt-3 pb-4 px-5 flex items-center justify-between gap-3 sticky top-0 z-10 glass-panel border-x-0 border-t-0 rounded-none border-b border-surface-container shadow-sm">
+        <div className="w-full flex items-center justify-between gap-3">
+          <h1 className="font-headline-md text-headline-md gradient-text font-bold">Gestión de Alumnos</h1>
+          {activeTab === "alumnos" && (
+            <button 
+              onClick={() => setIsInviteModalOpen(true)}
+              className="px-4 h-10 rounded-full premium-btn flex items-center gap-2 shadow-sm active:scale-95 transition-transform font-bold text-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">mail</span>
+              Invitar
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Tabs */}
+      <div className="px-margin-mobile pt-space-md">
+        <div className="flex bg-surface-container-low rounded-xl p-1 mb-6">
+          <button 
+            onClick={() => setActiveTab("alumnos")}
+            className={`flex-1 py-2.5 rounded-lg font-label-md font-bold transition-all ${activeTab === 'alumnos' ? 'bg-surface shadow-sm text-primary' : 'text-on-surface-variant'}`}
+          >
+            Directorio
+          </button>
+          <button 
+            onClick={() => setActiveTab("pagos")}
+            className={`flex-1 py-2.5 rounded-lg font-label-md font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'pagos' ? 'bg-surface shadow-sm text-primary' : 'text-on-surface-variant'}`}
+          >
+            Pagos Pendientes
+            {pagos.length > 0 && activeTab !== 'pagos' && (
+              <span className="w-5 h-5 bg-error rounded-full text-white text-[11px] flex items-center justify-center">!</span>
+            )}
+          </button>
+        </div>
+
+        {/* ALUMNOS TAB */}
+        {activeTab === "alumnos" && (
+          <div className="animate-in fade-in">
+            <div className="flex glass-panel rounded-xl px-4 h-12 items-center gap-2 mb-6 border border-surface-container-highest focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-on-surface-variant">search</span>
+              <input 
+                type="text" 
+                value={searchTerm}
+                onChange={event => setSearchTerm(event.target.value)}
+                placeholder="Buscar por nombre, RUT o correo..."
+                className="bg-transparent border-none outline-none flex-1 font-body-md text-on-surface placeholder:text-on-surface-variant"
+              />
+            </div>
+
+            {/* INVITACIONES PENDIENTES */}
+            {filteredInvitaciones.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-label-lg font-bold text-on-surface-variant mb-3 px-1 uppercase tracking-wider text-xs">Invitaciones Pendientes</h3>
+                <div className="flex flex-col gap-3">
+                  {filteredInvitaciones.map((inv) => (
+                    <article key={inv.correo} className="flex items-center justify-between p-4 premium-card border-dashed rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center">
+                          <span className="material-symbols-outlined">mail</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-body-md text-on-surface font-semibold">{inv.correo}</span>
+                          <span className="font-body-sm text-secondary">Pendiente de registro</span>
+                        </div>
+                      </div>
+                      <button onClick={() => handleCancelarInvitacion(inv.correo)} className="p-2 text-error hover:bg-error/10 rounded-full transition-colors">
+                        <span className="material-symbols-outlined">cancel</span>
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isLoading ? (
+              <div className="flex justify-center p-10"><span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span></div>
+            ) : alumnos.length === 0 ? (
+              <div className="p-8 bg-surface-container-low border border-surface-container rounded-2xl flex flex-col items-center text-center">
+                <span className="material-symbols-outlined text-[48px] text-secondary mb-3">group_off</span>
+                <h3 className="font-headline-sm text-on-surface">No hay alumnos registrados</h3>
+              </div>
+            ) : filteredAlumnos.length === 0 ? (
+              <div className="p-8 bg-surface-container-low border border-surface-container rounded-2xl flex flex-col items-center text-center">
+                <span className="material-symbols-outlined text-[48px] text-secondary mb-3">search_off</span>
+                <h3 className="font-headline-sm text-on-surface">No se encontraron resultados</h3>
+                <p className="font-body-sm text-on-surface-variant mt-1">Prueba con otro nombre, RUT o correo.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {filteredAlumnos.map((alumno) => (
+                  <article key={alumno.id} className={`p-4 rounded-2xl border flex flex-col gap-3 shadow-sm ${alumno.active ? 'bg-surface-container-lowest border-surface-container' : 'bg-surface-container-low border-surface-container opacity-70'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-xl uppercase">
+                          {alumno.name.charAt(0)}{alumno.last_name ? alumno.last_name.charAt(0) : ''}
+                        </div>
+                        <div className="flex flex-col">
+                          <h3 className="font-label-lg text-on-surface font-bold capitalize">{alumno.name} {alumno.last_name}</h3>
+                          <span className="font-body-sm text-secondary">{alumno.rut || "Sin RUT"}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => toggleStatus(alumno.id, alumno.active)} className={`w-12 h-6 rounded-full flex items-center transition-all px-1 shadow-inner ${alumno.active ? 'bg-emerald-500 justify-end' : 'bg-surface-container-highest justify-start'}`}>
+                        <div className="w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1.5 mt-2 pt-3 border-t border-surface-container font-body-sm text-on-surface-variant">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">mail</span>
+                        {alumno.correo || "No proporcionado"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">phone</span>
+                        {alumno.phone || "No proporcionado"}
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-error">
+                        <span className="material-symbols-outlined text-[18px]">emergency_home</span>
+                        {alumno.contacto_emergencia ? <span className="font-medium">{alumno.contacto_emergencia}</span> : "Sin contacto de emergencia"}
+                      </div>
+                      
+                      {/* Medical info */}
+                      <div className="flex items-start gap-2 mt-2 bg-surface-container-lowest p-2 rounded-lg border border-surface-container">
+                        <span className="material-symbols-outlined text-[18px] text-error mt-0.5">medical_services</span>
+                        <div className="flex flex-col flex-1 justify-center">
+                          {alumno.condicion_medica ? (
+                            <span className="font-body-xs italic line-clamp-2 text-on-surface" title={alumno.condicion_medica}>{alumno.condicion_medica}</span>
+                          ) : (
+                            <span className="font-body-xs italic text-secondary">Sin condiciones o alergias registradas</span>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditingAlumno(alumno);
+                            setEditEmergencia(alumno.contacto_emergencia || "");
+                            setEditFicha(alumno.condicion_medica || "");
+                          }}
+                          className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-highest flex items-center justify-center transition-colors shrink-0 text-on-surface-variant hover:text-on-surface"
+                          title="Editar Ficha"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => void abrirHistorial(alumno)} className="flex-1 h-10 rounded-lg glass-panel border border-surface-container-highest font-label-sm font-bold text-on-surface flex items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[18px]">history</span>
+                        Historial
+                      </button>
+                      <button className="flex-1 h-10 rounded-lg bg-primary text-on-primary font-label-sm font-bold flex items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                        Plan
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteAlumno(alumno.id, alumno.name)} 
+                        className="w-10 h-10 shrink-0 rounded-lg bg-error/10 text-error flex items-center justify-center transition-colors hover:bg-error/20" 
+                        title="Eliminar Alumno"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PAGOS TAB */}
+        {activeTab === "pagos" && (
+          <div className="animate-in fade-in">
+            {isLoading ? (
+              <div className="flex justify-center p-10"><span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span></div>
+            ) : pagos.length === 0 ? (
+              <div className="p-8 bg-surface-container-low border border-surface-container rounded-2xl flex flex-col items-center text-center">
+                <span className="material-symbols-outlined text-[48px] text-emerald-500 mb-3">task_alt</span>
+                <h3 className="font-headline-sm text-on-surface">Todo al día</h3>
+                <p className="font-body-sm text-on-surface-variant mt-1">No hay comprobantes de pago pendientes de revisión.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {pagos.map((pago) => (
+                  <article key={pago.id} className="p-4 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col gap-3 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-primary/10 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">account_balance</span>
+                        <span className="font-label-md font-bold text-primary">Transferencia Manual</span>
+                      </div>
+                      <span className="font-label-sm bg-primary text-on-primary px-2 py-0.5 rounded-full">Pendiente</span>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-headline-sm text-on-surface">{pago.profile?.name} {pago.profile?.last_name}</h3>
+                      <p className="font-body-sm text-on-surface-variant">Intenta comprar: <span className="font-bold text-on-surface">{pago.plan?.nombre_plan || "Plan desconocido"}</span></p>
+                      <p className="font-body-sm text-on-surface-variant">Monto reportado: <span className="font-bold text-on-surface">${pago.monto.toLocaleString()}</span></p>
+                    </div>
+
+                    <div className="bg-surface-container-lowest p-3 rounded-xl border border-surface-container-high flex flex-col gap-1 mt-1">
+                      <span className="font-label-sm font-bold text-on-surface-variant">Comprobante / Nro Transacción:</span>
+                      <div className="flex items-center justify-between bg-surface-container-low px-2 py-1.5 rounded">
+                        <span className="font-body-md text-on-surface font-mono truncate max-w-[180px]">
+                          {pago.comprobante_url?.startsWith('data:image/') ? "📷 Imagen Adjunta" : (pago.comprobante_url || "No adjuntado")}
+                        </span>
+                        {pago.comprobante_url && (
+                           <button 
+                             onClick={() => setSelectedImage(pago.comprobante_url)}
+                             className="text-primary hover:text-primary-fixed-variant flex items-center gap-1 font-label-sm font-bold bg-primary/10 px-2 py-1 rounded-md transition-colors active:scale-95"
+                           >
+                             <span className="material-symbols-outlined text-[16px]">visibility</span>
+                             Ver
+                           </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-primary/10">
+                      <button onClick={() => procesarPago(pago, "rechazado")} className="flex-1 h-12 rounded-xl bg-surface-container border border-error/30 text-error font-label-md font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform">
+                        <span className="material-symbols-outlined">close</span>
+                        Rechazar
+                      </button>
+                      <button onClick={() => procesarPago(pago, "aprobado")} className="flex-1 h-12 rounded-xl bg-primary text-on-primary font-label-md font-bold flex items-center justify-center gap-1 active:scale-95 transition-transform shadow-md">
+                        <span className="material-symbols-outlined">check</span>
+                        Aprobar y Liberar
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* IMAGE MODAL */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in p-4" onClick={() => setSelectedImage(null)}>
+          <div className="relative w-full max-w-md flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center bg-surface-container px-4 py-3 rounded-t-xl border-b border-surface-container-highest">
+              <span className="font-label-lg font-bold text-on-surface flex items-center gap-2">
+                 <span className="material-symbols-outlined text-[20px]">image</span>
+                 Comprobante Adjunto
+              </span>
+              <button onClick={() => setSelectedImage(null)} className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-secondary hover:text-on-surface transition-colors">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <div className="bg-surface-container-lowest rounded-b-xl overflow-hidden shadow-2xl flex items-center justify-center p-4">
+              {(selectedImage.startsWith('data:image/') || selectedImage.startsWith('http')) ? (
+                 <img src={selectedImage} alt="Comprobante Adjunto" className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-sm border border-surface-container-highest" />
+              ) : (
+                <div className="relative w-full aspect-[3/4] bg-surface-container rounded-lg border border-surface-container-highest overflow-hidden flex flex-col items-center justify-center">
+                   <div className="absolute inset-x-0 top-0 h-6 bg-primary/20 flex gap-1.5 px-3 items-center border-b border-primary/10">
+                   <div className="w-2.5 h-2.5 rounded-full bg-primary/40"></div>
+                   <div className="w-2.5 h-2.5 rounded-full bg-primary/40"></div>
+                   <div className="w-2.5 h-2.5 rounded-full bg-primary/40"></div>
+                 </div>
+                 <span className="material-symbols-outlined text-[64px] text-primary/40 mb-3 drop-shadow-sm">receipt_long</span>
+                 <span className="font-label-lg text-secondary mb-1 uppercase tracking-widest">Cuerpo y Alma</span>
+                 <span className="font-headline-sm font-bold gradient-text mb-3 text-center">Transferencia<br/>Recibida</span>
+                 <div className="w-3/4 h-px bg-surface-container-highest my-3 border-b border-dashed border-secondary/30"></div>
+                 <span className="font-body-sm text-secondary font-mono bg-surface-container-high px-3 py-1.5 rounded-md text-center max-w-[80%] break-all shadow-inner">
+                   {selectedImage}
+                 </span>
+                 <span className="absolute bottom-4 font-body-xs text-secondary/60 text-center w-full">(Simulación visual del archivo)</span>
+              </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: HISTORIAL DEL ALUMNO */}
+      {alumnoHistorial && (
+        <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4" onClick={() => setAlumnoHistorial(null)}>
+          <section className="w-full sm:max-w-2xl max-h-[90vh] bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden" onClick={event => event.stopPropagation()}>
+            <header className="p-5 border-b border-surface-container flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-headline-sm font-bold text-on-surface">Historial del alumno</h2>
+                <p className="font-body-sm text-on-surface-variant mt-1">
+                  {alumnoHistorial.name} {alumnoHistorial.last_name} · {alumnoHistorial.correo || "Sin correo"}
+                </p>
+              </div>
+              <button onClick={() => setAlumnoHistorial(null)} className="w-9 h-9 shrink-0 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant" aria-label="Cerrar historial">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </header>
+
+            <div className="p-5 overflow-y-auto flex flex-col gap-6">
+              {isLoadingHistorial ? (
+                <div className="flex justify-center p-10">
+                  <span className="material-symbols-outlined animate-spin text-primary text-3xl">refresh</span>
+                </div>
+              ) : (
+                <>
+                  {historialError && (
+                    <p className="p-3 rounded-xl bg-error/10 text-error font-body-sm">{historialError}</p>
+                  )}
+
+                  <section>
+                    <h3 className="font-label-lg font-bold text-on-surface flex items-center gap-2 mb-3">
+                      <span className="material-symbols-outlined text-primary">card_membership</span>
+                      Planes registrados ({historialPlanes.length})
+                    </h3>
+                    {historialPlanes.length === 0 ? (
+                      <p className="p-4 rounded-xl bg-surface-container-low text-on-surface-variant font-body-sm">Este alumno todavía no tiene planes registrados.</p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {historialPlanes.map(plan => (
+                          <article key={plan.id} className="p-4 rounded-2xl border border-surface-container bg-surface-container-lowest">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h4 className="font-label-lg font-bold text-on-surface">{plan.nombre}</h4>
+                                <p className="font-body-sm text-on-surface-variant mt-1">Inicio: {formatHistoryDate(plan.fechaInicio)}</p>
+                                <p className="font-body-sm text-on-surface-variant">Vence: {formatHistoryDate(plan.fechaFin)}</p>
+                              </div>
+                              <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm font-bold capitalize">{plan.estado}</span>
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-surface-container flex flex-wrap gap-x-4 gap-y-1 font-body-sm text-on-surface-variant">
+                              <span>{plan.creditosRestantes} créditos restantes</span>
+                              {plan.precio !== null && <span>${plan.precio.toLocaleString("es-CL")}</span>}
+                              {plan.pagoEstado && <span>Pago: {plan.pagoEstado}</span>}
+                              {plan.metodoPago && <span>Método: {plan.metodoPago}</span>}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section>
+                    <h3 className="font-label-lg font-bold text-on-surface flex items-center gap-2 mb-3">
+                      <span className="material-symbols-outlined text-primary">event_available</span>
+                      Clases registradas ({historialClases.length})
+                    </h3>
+                    {historialClases.length === 0 ? (
+                      <p className="p-4 rounded-xl bg-surface-container-low text-on-surface-variant font-body-sm">Este alumno todavía no tiene clases registradas.</p>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {historialClases.map(reserva => (
+                          <article key={reserva.id_reserva} className="p-4 rounded-2xl border border-surface-container bg-surface-container-lowest flex items-start justify-between gap-3">
+                            <div>
+                              <h4 className="font-label-lg font-bold text-on-surface">{reserva.clase?.nombre_clase || "Clase"}</h4>
+                              <p className="font-body-sm text-on-surface-variant mt-1">{formatHistoryDate(reserva.clase?.fecha_hora_inicio || null, true)}</p>
+                              <p className="font-body-sm text-on-surface-variant">Sala: {reserva.clase?.sala || "Sin sala asignada"}</p>
+                            </div>
+                            <span className="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm font-bold capitalize">{reserva.estado_reserva}</span>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Toast */}
+      <div className={`fixed top-20 inset-x-4 z-[70] flex items-center justify-center pointer-events-none transition-all duration-300 ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
+        <div className="bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 max-w-sm">
+          <span className="material-symbols-outlined text-emerald-400 text-[20px]">check_circle</span>
+          <span className="font-label-md text-label-md">{toastMessage}</span>
+        </div>
+      </div>
+
+      {/* EDIT MEDICAL MODAL */}
+      {editingAlumno && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end animate-in fade-in" onClick={() => setEditingAlumno(null)}>
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-2 border-b border-surface-container pb-3">
+              <h3 className="font-headline-sm font-bold gradient-text flex items-center gap-2">
+                <span className="material-symbols-outlined text-error">medical_services</span>
+                Ficha Médica
+              </h3>
+              <button onClick={() => setEditingAlumno(null)} className="w-8 h-8 flex items-center justify-center bg-surface-container rounded-full hover:bg-surface-container-highest">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <p className="font-body-sm text-on-surface-variant">
+              Actualizando datos de <strong>{editingAlumno.name} {editingAlumno.last_name}</strong>
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="font-label-sm font-bold text-on-surface">Número de Emergencia</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej. Mamá: +569 1234 5678" 
+                  value={editEmergencia} 
+                  onChange={e => setEditEmergencia(e.target.value)} 
+                  className="h-12 glass-panel border border-surface-container-highest rounded-xl px-4 text-on-surface focus:outline-none focus:border-secondary" 
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-label-sm font-bold text-on-surface">Condiciones, Lesiones o Alergias</label>
+                <textarea 
+                  placeholder="Ej. Asma leve, lesión de rodilla..." 
+                  value={editFicha} 
+                  onChange={e => setEditFicha(e.target.value)} 
+                  className="h-24 glass-panel border border-surface-container-highest rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-secondary resize-none font-body-sm" 
+                />
+              </div>
+
+              <button onClick={handleSaveFicha} className="w-full h-14 bg-primary text-on-primary font-label-lg font-bold rounded-xl shadow-md mt-2">
+                Guardar Ficha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: INVITAR ALUMNO */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex flex-col justify-end">
+          <div className="glass-panel w-full rounded-t-3xl rounded-b-none border-b-0 p-6 pb-safe flex flex-col gap-4 animate-in slide-in-from-bottom">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-headline-sm font-bold gradient-text">Invitar Alumno</h3>
+              <button onClick={() => setIsInviteModalOpen(false)} className="w-8 h-8 bg-surface-container rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[20px]">close</span></button>
+            </div>
+            <p className="text-body-sm text-on-surface-variant mb-2">Ingresa el correo del alumno. Solo podrá registrarse y acceder a la academia si su correo está en esta lista de invitados.</p>
+            <form onSubmit={handleInvitar} className="flex flex-col gap-4">
+              <input 
+                required 
+                type="email" 
+                placeholder="correo@ejemplo.com" 
+                value={inviteEmail} 
+                onChange={e => setInviteEmail(e.target.value)} 
+                className="w-full h-12 bg-surface-container-low rounded-xl px-4 text-on-surface focus:outline-none focus:border-primary border border-transparent" 
+              />
+              <button type="submit" className="w-full h-12 premium-btn font-bold rounded-xl mt-2 shadow-md">
+                Enviar Invitación
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
