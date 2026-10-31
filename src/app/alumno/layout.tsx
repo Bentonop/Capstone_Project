@@ -11,7 +11,9 @@ export default function AlumnoLayout({
     <RoleGuard allowedRole="alumno">
       <Header profileLink="/alumno/perfil" />
       <main className="flex flex-col relative w-full pt-16 pb-bottom-nav-safe bg-surface min-h-screen">
-        {children}
+        <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col">
+          {children}
+        </div>
       </main>
       <BottomNavigation />
     </RoleGuard>

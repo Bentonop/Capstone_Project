@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import BrandLogo from "@/components/ui/BrandLogo";
 import { AuthFormProps } from "./AuthForm";
 import { supabase } from "@/lib/supabase";
 
@@ -64,14 +65,13 @@ const RecoverPasswordForm = ({ setTypeSelected }: AuthFormProps) => {
         <div>
             <div className="w-full backdrop-blur-xl py-6 rounded-4xl">
                 <div className="rounded-xl px-6">
-                    <div className="text-center">
-                        <h1 className="lg:text-5xl md:text-4xl text-3xl font-semibold text-center my-4">
-                            Recuperar Contraseña
-                        </h1>
-                        <p className="text-sm text-muted-foreground mb-8">
-                            Te enviaremos un correo para recuperar tu contraseña
-                        </p>
-                    </div>
+                    <div className="text-center mb-6">
+                    <BrandLogo size="lg" showText={true} className="mb-2" />
+                    <h2 className="text-2xl font-bold tracking-tight text-on-surface mt-3">Recuperar Contraseña</h2>
+                    <p className="text-sm text-secondary mt-1">
+                        Te enviaremos un correo para restablecer tu acceso.
+                    </p>
+                </div>
 
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <div className="grid gap-2">

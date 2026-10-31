@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import BrandLogo from "@/components/ui/BrandLogo";
 import { AuthFormProps } from "./AuthForm";
 import { supabase } from "@/lib/supabase"; 
 import { useRouter } from "next/navigation"; 
@@ -108,13 +109,11 @@ const SignUpForm = ({ setTypeSelected }: AuthFormProps) => {
         <div>
             <div className="w-full backdrop-blur-xl rounded-4xl pb-4">
 
-                <div className="text-center">
-                    <h1 className="lg:text-5xl md:text-4xl text-3xl font-semibold text-center my-4">
-                        Crear Cuenta
-                    </h1>
-
-                    <p className="text-sm text-muted-foreground mb-8">
-                        Ingresa tus datos para registrarte
+                <div className="text-center mb-6">
+                    <BrandLogo size="lg" showText={true} className="mb-2" />
+                    <h2 className="text-2xl font-bold tracking-tight text-on-surface mt-3">Crear Cuenta</h2>
+                    <p className="text-sm text-secondary mt-1">
+                        Ingresa tus datos y tu código de invitación para registrarte.
                     </p>
                 </div>
 

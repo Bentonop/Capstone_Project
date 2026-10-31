@@ -2,10 +2,29 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import StudentQrAttendanceModal from "@/components/shared/StudentQrAttendanceModal";
 
 export default function AlumnoDashboard() {
   const [programs, setPrograms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [userName, setUserName] = useState<string>("Bailarín/a");
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!supabase) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).maybeSingle();
+          if (profile?.name) setUserName(profile.name);
+        }
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    }
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     async function fetchClasses() {
@@ -86,7 +105,6 @@ export default function AlumnoDashboard() {
           
           daysOrder.forEach(day => {
             if (pg.schedulesMap[day] && pg.schedulesMap[day].length > 0) {
-              // Sort times (basic string sort works for AM/PM if they are zero padded correctly, but this is simple enough)
               schedules.push({
                 day: day,
                 times: pg.schedulesMap[day]
@@ -120,7 +138,25 @@ export default function AlumnoDashboard() {
     <div className="flex flex-col w-full pb-bottom-nav-safe">
       <div className="flex flex-col px-margin-mobile gap-space-lg pt-space-sm">
         
-        <div className="flex items-center gap-2 mb-2">
+        {/* Banner de Bienvenida y Acceso Rápido Asistencia QR */}
+        <section className="bg-gradient-to-br from-surface-container-low via-surface-container-lowest to-surface-container-low p-5 rounded-3xl border border-primary/20 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="font-label-caps text-[11px] text-primary font-bold uppercase tracking-wider">¡Hola, {userName}! ✨</span>
+            <h2 className="font-headline-sm text-xl text-on-surface font-bold mt-0.5">Control de Asistencia</h2>
+            <p className="font-body-sm text-xs text-secondary mt-1">
+              ¿Estás en la academia? Escanea el código QR que muestra tu profesor para confirmar tu llegada a la clase.
+            </p>
+          </div>
+          <button 
+            onClick={() => setIsScannerOpen(true)}
+            className="h-12 px-5 rounded-2xl bg-primary text-on-primary font-label-md font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 shrink-0"
+          >
+            <span className="material-symbols-outlined text-[22px]">qr_code_scanner</span>
+            Escanear QR
+          </button>
+        </section>
+
+        <div className="flex items-center gap-2 mb-1">
           <span className="material-symbols-outlined text-primary text-[28px]">library_books</span>
           <h1 className="font-headline-md text-[24px] text-on-surface font-bold">Nuestros programas</h1>
         </div>
@@ -177,6 +213,12 @@ export default function AlumnoDashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal para Escanear Asistencia (Autoservicio) */}
+      <StudentQrAttendanceModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </div>
   );
 }

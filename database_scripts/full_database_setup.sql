@@ -1,4 +1,4 @@
--- ==========================================
+﻿-- ==========================================
 -- SCRIPT COMPLETO DE CREACIÓN Y DEMO DE LA BASE DE DATOS
 -- ==========================================
 -- Este script crea todas las tablas desde cero, borra la data existente
@@ -138,9 +138,22 @@ CREATE TABLE public.reserva (
 
 CREATE TABLE public.asistencia (
     id SERIAL PRIMARY KEY,
-    id_reserva INTEGER NOT NULL REFERENCES public.reserva(id_reserva) ON DELETE CASCADE,
+    id_reserva INTEGER NOT NULL UNIQUE REFERENCES public.reserva(id_reserva) ON DELETE CASCADE,
     asistio BOOLEAN DEFAULT false,
+    fecha_hora_ingreso TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    metodo_ingreso TEXT DEFAULT 'QR',
+    token_qr_usado TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.notificaciones (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    tipo TEXT NOT NULL DEFAULT 'informativa',
+    titulo TEXT NOT NULL,
+    mensaje TEXT NOT NULL,
+    leida BOOLEAN DEFAULT false,
+    clase_id INTEGER REFERENCES public.clase(id_clase) ON DELETE CASCADE,
+    creado_en TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 

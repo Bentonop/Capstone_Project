@@ -34,32 +34,30 @@ export function AdminBottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full z-50 pb-safe pointer-events-none">
-      <div className="px-margin-mobile pb-space-xs pt-space-2xs">
-        <div className="pointer-events-auto h-bottom-nav-height glass-panel flex items-center justify-around px-space-2xs">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.match);
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex-1 h-full flex flex-col items-center justify-center gap-1 transition-colors ${
-                  isActive
-                    ? "bottom-nav-active font-label-lg"
-                    : "bottom-nav-inactive hover:text-main"
-                }`}
-              >
-                <span className="material-symbols-outlined text-[24px]">
-                  {item.icon}
-                </span>
-                <span className="font-label-md text-label-md text-center">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+    <nav className="fixed bottom-3 left-0 right-0 z-50 px-margin-mobile pb-safe pointer-events-none">
+      <div className="max-w-md mx-auto pointer-events-auto h-bottom-nav-height glass-panel flex items-center justify-around px-space-xs shadow-2xl">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.match);
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex-1 h-full flex flex-col items-center justify-center gap-1 transition-colors ${
+                isActive
+                  ? "bottom-nav-active font-label-lg"
+                  : "bottom-nav-inactive hover:text-main"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                {item.icon}
+              </span>
+              <span className="font-label-md text-label-md text-center">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

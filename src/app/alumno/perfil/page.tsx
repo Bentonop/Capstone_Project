@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 export default function AlumnoPerfilPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -63,9 +64,10 @@ export default function AlumnoPerfilPage() {
       
       setProfile({ ...profile, ...formData });
       setIsEditing(false);
+      toast.success("Perfil actualizado con éxito");
     } catch (err) {
       console.error("Error saving profile", err);
-      alert("Error al guardar el perfil");
+      toast.error("Error al guardar el perfil");
     } finally {
       setIsSaving(false);
     }

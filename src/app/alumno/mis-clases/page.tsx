@@ -4,72 +4,143 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { QRCodeSVG } from "qrcode.react";
+import toast from "react-hot-toast";
+import StudentQrAttendanceModal from "@/components/shared/StudentQrAttendanceModal";
 
 export default function MisClasesPage() {
   const [activeTab, setActiveTab] = useState("hoy");
   const [reservas, setReservas] = useState<any[]>([]);
   const [credits, setCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
-  // Nuevo estado para el modal del Pase QR
+  // Estados para modales de QR
   const [selectedReserva, setSelectedReserva] = useState<any | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const fetchMyClasses = async () => {
+    if (!supabase) return;
+    
+    let targetUserId: string | null = null;
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.id) targetUserId = authUser.id;
+    } catch (e) {
+      console.error("Error getting auth user:", e);
+    }
+
+    if (!targetUserId) {
+      const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).maybeSingle();
+      targetUserId = user?.id || null;
+    }
+
+    if (!targetUserId) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const { data: subs } = await supabase
+      .from("user_suscripciones")
+      .select("creditos_restantes")
+      .eq("user_id", targetUserId)
+      .eq("estado", "activa")
+      .gt("creditos_restantes", 0);
+      
+    if (subs) {
+       const totalCredits = subs.reduce((sum, sub) => sum + sub.creditos_restantes, 0);
+       setCredits(totalCredits);
+    }
+
+    // Fetch reservations with class details
+    const { data, error } = await supabase
+      .from('reserva')
+      .select(`
+         *,
+         clase (
+            *,
+            profiles:id_profesor (name)
+         )
+      `)
+      .eq("id_usuario", targetUserId)
+      .order("fecha_operacion", { ascending: false });
+      
+    if (!error && data) {
+      // filter out invalid and cancelled
+      const validData = data.filter(r => r.clase && r.estado_reserva !== "cancelada");
+      setReservas(validData);
+    }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    async function fetchMyClasses() {
-      if (!supabase) return;
-      
-      let targetUserId: string | null = null;
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser?.id) targetUserId = authUser.id;
-      } catch (e) {
-        console.error("Error getting auth user:", e);
-      }
-
-      if (!targetUserId) {
-        const { data: user } = await supabase.from("profiles").select("id").eq("role", "alumno").order("created_at", { ascending: true }).limit(1).maybeSingle();
-        targetUserId = user?.id || null;
-      }
-
-      if (!targetUserId) {
-        setIsLoading(false);
-        return;
-      }
-      
-      const { data: subs } = await supabase
-        .from("user_suscripciones")
-        .select("creditos_restantes")
-        .eq("user_id", targetUserId)
-        .eq("estado", "activa")
-        .gt("creditos_restantes", 0);
-        
-      if (subs) {
-         const totalCredits = subs.reduce((sum, sub) => sum + sub.creditos_restantes, 0);
-         setCredits(totalCredits);
-      }
-
-      // Fetch reservations with class details
-      const { data, error } = await supabase
-        .from('reserva')
-        .select(`
-           *,
-           clase (
-              *,
-              profiles:id_profesor (name)
-           )
-        `)
-        .eq("id_usuario", targetUserId)
-        .order("fecha_operacion", { ascending: false });
-        
-      if (!error && data) {
-        // filter out invalid
-        const validData = data.filter(r => r.clase);
-        setReservas(validData);
-      }
-      setIsLoading(false);
-    }
     fetchMyClasses();
   }, []);
+
+  const handleCancelarReserva = async (reserva: any) => {
+    const classStartTime = new Date(reserva.clase.fecha_hora_inicio);
+    const hoursDifference = (classStartTime.getTime() - Date.now()) / (1000 * 60 * 60);
+
+    const isEarlyCancel = hoursDifference >= 2;
+    const confirmMessage = isEarlyCancel
+      ? `¿Deseas cancelar tu reserva para "${reserva.clase.nombre_clase}"?\n\nAl cancelar con más de 2 horas de anticipación, tu crédito será reembolsado automáticamente a tu saldo mensual.`
+      : `¿Deseas cancelar tu reserva para "${reserva.clase.nombre_clase}"?\n\nAtención: Faltan menos de 2 horas para el inicio de la clase, por lo que el crédito no será reembolsado.`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setCancellingId(reserva.id_reserva);
+    try {
+      if (!supabase) throw new Error("No hay cliente Supabase inicializado");
+
+      // 1. Marcar reserva como cancelada
+      const { error: cancelError } = await supabase
+        .from("reserva")
+        .update({ estado_reserva: "cancelada" })
+        .eq("id_reserva", reserva.id_reserva);
+
+      if (cancelError) throw cancelError;
+
+      // 2. Decrementar cupos_inscritos en la clase
+      const currentEnrolled = reserva.clase.cupos_inscritos || 1;
+      await supabase
+        .from("clase")
+        .update({ cupos_inscritos: Math.max(0, currentEnrolled - 1) })
+        .eq("id_clase", reserva.clase.id_clase);
+
+      // 3. Reembolsar crédito si fue con >= 2 horas
+      if (isEarlyCancel) {
+        const { data: sub } = await supabase
+          .from("user_suscripciones")
+          .select("id, creditos_restantes")
+          .eq("user_id", reserva.id_usuario)
+          .eq("estado", "activa")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (sub) {
+          await supabase
+            .from("user_suscripciones")
+            .update({ creditos_restantes: (sub.creditos_restantes || 0) + 1 })
+            .eq("id", sub.id);
+          setCredits(prev => prev + 1);
+        }
+      }
+
+      // 4. Actualizar estado local
+      setReservas(prev => prev.filter(r => r.id_reserva !== reserva.id_reserva));
+
+      toast.success(
+        isEarlyCancel
+          ? "Clase cancelada. Tu crédito ha sido reembolsado exitosamente."
+          : "Clase cancelada. Cupo liberado para la academia."
+      );
+    } catch (err: any) {
+      console.error("Error al cancelar reserva:", err);
+      toast.error("Hubo un error al cancelar la clase. Intenta nuevamente.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -94,14 +165,25 @@ export default function MisClasesPage() {
       <div className="flex flex-col px-margin-mobile gap-space-lg pt-space-sm">
         
         {/* Tu Ritmo Activo */}
-        <section className="flex items-end justify-between">
+        <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div className="flex flex-col">
             <span className="font-label-caps text-[11px] text-primary font-bold uppercase tracking-wider mb-1">TU RITMO ACTIVO</span>
             <h1 className="font-headline-md text-[24px] text-on-surface font-bold leading-none">{reservas.length} Clases Reservadas</h1>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high rounded-full border border-primary/20">
-            <span className="material-symbols-outlined text-primary text-[18px]">local_activity</span>
-            <span className="font-label-md text-label-md text-on-surface font-bold">{credits} créditos</span>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl border border-primary/30 font-label-md text-xs font-bold transition-all active:scale-95 shadow-sm"
+              title="Escanear código QR en la entrada o del profesor"
+            >
+              <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+              Escanear Sala
+            </button>
+            <div className="flex items-center gap-1.5 px-3.5 py-2 bg-surface-container-high rounded-xl border border-primary/20">
+              <span className="material-symbols-outlined text-primary text-[18px]">local_activity</span>
+              <span className="font-label-md text-label-md text-on-surface font-bold">{credits} créditos</span>
+            </div>
           </div>
         </section>
 
@@ -166,6 +248,7 @@ export default function MisClasesPage() {
             const durationMins = Math.round(durationMs / 60000);
             
             const isToday = startDate.toDateString() === now.toDateString();
+            const isPresente = cls.estado_reserva === "presente";
             
             const days = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
             const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
@@ -194,14 +277,23 @@ export default function MisClasesPage() {
                     <span className="font-headline-sm text-headline-sm text-on-surface">{timeStr} hrs</span>
                     <span className="font-body-sm text-[12px] text-on-surface-variant ml-1">- {durationMins} min</span>
                   </div>
-                  <span className="px-2.5 py-1 bg-surface-container rounded-full font-label-md text-[11px] text-on-surface font-medium border border-surface-container-high">
-                    Confirmada
-                  </span>
+
+                  {isPresente ? (
+                    <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 rounded-full font-label-md text-[11px] font-bold border border-emerald-500/20 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Presente
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 bg-surface-container rounded-full font-label-md text-[11px] text-on-surface font-medium border border-surface-container-high">
+                      Confirmada
+                    </span>
+                  )}
                 </div>
 
                 {/* Class info */}
                 <div className="flex gap-space-md p-space-md">
-                  <div className="w-14 h-14 rounded-xl bg-surface-container-high flex-shrink-0 border border-surface-container overflow-hidden">
+                  <div className="w-14 h-14 rounded-xl bg-surface-container-high flex-shrink-0 border border-surface-container overflow-hidden flex items-center justify-center text-primary font-bold text-lg">
+                    CA
                   </div>
                   <div className="flex flex-col justify-center">
                     <h3 className="font-headline-sm text-[18px] text-on-surface font-bold mb-1 leading-tight">{cls.clase.nombre_clase}</h3>
@@ -216,23 +308,54 @@ export default function MisClasesPage() {
                 {(isToday || activeTab === 'futuras') && (
                   <div className="flex gap-2 p-space-md pt-0">
                     {isToday ? (
-                      <button 
-                        onClick={() => setSelectedReserva(cls)}
-                        className="flex-1 h-14 bg-primary text-on-primary rounded-xl font-label-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-sm"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-                        Check-in QR
-                      </button>
+                      isPresente ? (
+                        <div className="flex-1 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-xl font-label-lg font-bold flex items-center justify-center gap-2 text-emerald-500">
+                          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                          Asistencia Confirmada
+                        </div>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => setSelectedReserva(cls)}
+                            className="flex-1 h-14 bg-primary text-on-primary rounded-xl font-label-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-sm"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
+                            Mi Pase QR
+                          </button>
+                          <button 
+                            onClick={() => setIsScannerOpen(true)}
+                            className="h-14 px-4 bg-surface-container-high text-primary border border-primary/20 rounded-xl font-label-lg font-bold flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-all shadow-sm"
+                            title="Escanear código mostrado por el profesor"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                            Escanear
+                          </button>
+                        </>
+                      )
                     ) : (
-                      <button className="flex-1 h-14 bg-surface-container-high text-on-surface rounded-xl font-label-lg font-medium flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all">
+                      <Link
+                        href="/alumno/explorar"
+                        className="flex-1 h-14 bg-surface-container-high text-on-surface rounded-xl font-label-lg font-medium flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all"
+                      >
                         <span className="material-symbols-outlined text-[18px]">edit_calendar</span>
                         Reagendar
+                      </Link>
+                    )}
+
+                    {!isPresente && (
+                      <button 
+                        onClick={() => handleCancelarReserva(cls)}
+                        disabled={cancellingId === cls.id_reserva}
+                        className={`${isToday ? 'w-[100px]' : 'flex-1'} h-14 bg-surface-container-high text-on-surface rounded-xl font-label-lg font-medium flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all disabled:opacity-50`}
+                      >
+                        {cancellingId === cls.id_reserva ? (
+                          <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                        ) : (
+                          <span className="material-symbols-outlined text-[18px]">close</span>
+                        )}
+                        Cancelar
                       </button>
                     )}
-                    <button className={`${isToday ? 'w-[120px]' : 'flex-1'} h-14 bg-surface-container-high text-on-surface rounded-xl font-label-lg font-medium flex items-center justify-center gap-2 hover:bg-surface-container-highest transition-all`}>
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                      Cancelar
-                    </button>
                   </div>
                 )}
               </article>
@@ -241,7 +364,7 @@ export default function MisClasesPage() {
         </div>
       </div>
 
-      {/* Modal Pase de Entrada QR */}
+      {/* Modal Pase de Entrada QR (Opción A: Alumno muestra su código) */}
       {selectedReserva && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest p-6 rounded-3xl max-w-sm w-full text-center shadow-2xl border border-surface-container flex flex-col items-center">
@@ -276,6 +399,13 @@ export default function MisClasesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Lector de QR (Opción B: Alumno escanea al profesor / sala) */}
+      <StudentQrAttendanceModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSuccess={() => fetchMyClasses()}
+      />
 
     </div>
   );
