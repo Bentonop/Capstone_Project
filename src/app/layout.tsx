@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -25,6 +26,18 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen flex flex-col bg-surface text-on-surface font-sans">
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: "#1E201D",
+              color: "#FFFFFF",
+              border: "1px solid rgba(212, 167, 44, 0.3)",
+              borderRadius: "12px",
+              fontSize: "14px",
+            },
+          }}
+        />
         {children}
       </body>
     </html>

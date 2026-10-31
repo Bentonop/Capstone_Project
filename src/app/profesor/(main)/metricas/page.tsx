@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -38,12 +38,25 @@ export default function ProfesorMetricasPage() {
         
         const now = new Date();
         
-        // Traer TODAS las clases pasadas
-        const { data: clases, error } = await supabase
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+        let targetProfId = authUser?.id;
+
+        if (!targetProfId) {
+          const { data: prof } = await supabase.from("profiles").select("id").eq("role", "profesor").limit(1).maybeSingle();
+          targetProfId = prof?.id;
+        }
+
+        let query = supabase
           .from("clase")
           .select("*")
           .lt("fecha_hora_fin", now.toISOString())
           .order("fecha_hora_inicio", { ascending: false });
+
+        if (targetProfId) {
+          query = query.eq("id_profesor", targetProfId);
+        }
+
+        const { data: clases, error } = await query;
 
         if (error) throw error;
         

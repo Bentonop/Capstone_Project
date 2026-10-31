@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 interface Profile {
   id: string;
@@ -100,7 +101,7 @@ export default function AdminAlumnosPage() {
       .maybeSingle();
 
     if (existingInvite) {
-      alert("Error: Este correo ya tiene una invitación pendiente.");
+      toast.error("Este correo ya tiene una invitación pendiente.");
       return;
     }
 
@@ -112,7 +113,7 @@ export default function AdminAlumnosPage() {
       .maybeSingle();
 
     if (existingProfile) {
-      alert("Error: Este correo ya tiene una cuenta registrada en la plataforma.");
+      toast.error("Este correo ya tiene una cuenta registrada en la plataforma.");
       return;
     }
 
@@ -126,7 +127,7 @@ export default function AdminAlumnosPage() {
     }]);
     
     if (error) {
-      alert("Error al invitar. Quizás el correo ya está invitado.");
+      toast.error("Error al invitar. Quizás el correo ya está invitado.");
     } else {
       showToast(`Invitación enviada. Enviando correo...`);
       
@@ -219,7 +220,7 @@ export default function AdminAlumnosPage() {
       fetchAlumnos();
     } catch (error) {
       console.error("Error eliminando alumno", error);
-      alert("Error al eliminar la cuenta del alumno.");
+      toast.error("Error al eliminar la cuenta del alumno.");
     }
   };
 
@@ -244,11 +245,11 @@ export default function AdminAlumnosPage() {
       }
       
       // 3. Refresh
-      alert(`Pago ${action} con éxito.`);
+      toast.success(`Pago ${action} con éxito.`);
       fetchPagos();
     } catch (error) {
       console.error("Error procesando pago", error);
-      alert("Error procesando el pago. Verifica las tablas.");
+      toast.error("Error al procesar el pago. Verifica la base de datos.");
     }
   };
 
@@ -269,7 +270,7 @@ export default function AdminAlumnosPage() {
       fetchAlumnos(); // refresh
     } catch (error) {
       console.error("Error updating ficha", error);
-      alert("Error al actualizar la ficha médica.");
+      toast.error("Error al actualizar la ficha médica.");
     }
   };
 

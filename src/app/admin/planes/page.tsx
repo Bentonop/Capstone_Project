@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 export default function AdminPlanesPage() {
   const [planes, setPlanes] = useState<any[]>([]);
@@ -67,7 +68,7 @@ export default function AdminPlanesPage() {
 
       if (error) throw error;
 
-      showToast("Plan creado exitosamente");
+      toast.success("Plan creado exitosamente");
       setIsModalOpen(false);
       setFormData({
         nombre_plan: "",
@@ -82,7 +83,7 @@ export default function AdminPlanesPage() {
       fetchPlanes();
     } catch (error) {
       console.error("Error al crear plan:", error);
-      alert("Error al guardar el plan. ¿Creaste la tabla en Supabase?");
+      toast.error("Error al guardar el plan. Verifica que la tabla exista en Supabase.");
     }
   };
 

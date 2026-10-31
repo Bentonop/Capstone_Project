@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,8 +28,8 @@ export function ProfesorBottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-3 inset-x-margin-mobile z-50 pb-safe">
-      <div className="h-16 glass-panel flex items-center justify-around px-space-xs">
+    <nav className="fixed bottom-3 left-0 right-0 z-50 px-margin-mobile pb-safe pointer-events-none">
+      <div className="h-16 max-w-md mx-auto glass-panel flex items-center justify-around px-space-xs pointer-events-auto shadow-2xl">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.match);
           

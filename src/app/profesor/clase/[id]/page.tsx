@@ -1,9 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import QrScanner from "@/components/shared/QrScanner";
+import RoleGuard from "@/components/ui/auth/RoleGuard";
+import { QRCodeSVG } from "qrcode.react";
+import BrandLogo from "@/components/ui/BrandLogo";
 
 type StudentStatus = "presente" | "pendiente" | "cancelado";
 
@@ -240,9 +243,10 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
   };
 
   return (
+    <RoleGuard allowedRole="profesor">
     <div className="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen">
       <header className="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe">
-        <div className="h-16 px-margin-mobile flex items-center justify-between">
+        <div className="h-16 max-w-5xl mx-auto px-margin-mobile flex items-center justify-between w-full">
           <div className="flex items-center gap-space-xs">
             <button 
               aria-label="Volver" 
@@ -251,9 +255,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
             >
               <span className="material-symbols-outlined text-[24px]">arrow_back</span>
             </button>
-            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center font-bold text-[10px] text-on-primary">
-              CA
-            </div>
+            <BrandLogo size="sm" showText={false} />
             <h1 className="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[200px] ml-2">Detalle De Clase</h1>
           </div>
           <div className="flex items-center gap-space-xs">
@@ -263,7 +265,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
       </header>
 
       <main className="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen">
-        <div className="flex flex-col w-full pb-10">
+        <div className="flex flex-col w-full max-w-5xl mx-auto pb-10">
           
           <section className="px-margin-mobile pt-space-xs pb-space-sm">
             <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-surface-container/50">
@@ -334,7 +336,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
           </section>
 
           <section className="px-margin-mobile py-space-xs">
-            <div className="premium-card/50 rounded-2xl p-space-md shadow-md flex flex-col">
+            <div className="premium-card rounded-2xl p-space-md shadow-md flex flex-col">
               <div className="flex items-center justify-between mb-space-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -382,35 +384,12 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
               ) : (
                 <div className="flex flex-col items-center py-2">
                   <div className="p-5 bg-surface-container rounded-2xl shadow-inner border border-surface-container-high flex flex-col items-center w-full">
-                    <div className="w-52 h-52 bg-white p-2 rounded-xl flex items-center justify-center shadow-md">
-                      <svg className="w-full h-full" fill="#1b1c1b" viewBox="0 0 100 100">
-                        <rect fill="#111625" height="28" rx="4" width="28" x="5" y="5"></rect>
-                        <rect fill="#ffffff" height="20" rx="2" width="20" x="9" y="9"></rect>
-                        <rect fill="#D4AF37" height="12" rx="1.5" width="12" x="13" y="13"></rect>
-                        <rect fill="#111625" height="28" rx="4" width="28" x="67" y="5"></rect>
-                        <rect fill="#ffffff" height="20" rx="2" width="20" x="71" y="9"></rect>
-                        <rect fill="#D4AF37" height="12" rx="1.5" width="12" x="75" y="13"></rect>
-                        <rect fill="#111625" height="28" rx="4" width="28" x="5" y="67"></rect>
-                        <rect fill="#ffffff" height="20" rx="2" width="20" x="9" y="71"></rect>
-                        <rect fill="#D4AF37" height="12" rx="1.5" width="12" x="13" y="75"></rect>
-                        <rect height="6" rx="1" width="6" x="38" y="8"></rect>
-                        <rect height="5" rx="1" width="8" x="48" y="14"></rect>
-                        <rect height="6" rx="1" width="16" x="40" y="24"></rect>
-                        <rect height="8" rx="1" width="8" x="10" y="40"></rect>
-                        <rect height="6" rx="1" width="12" x="22" y="44"></rect>
-                        <rect height="6" rx="1" width="10" x="8" y="54"></rect>
-                        <rect fill="#D4AF37" height="16" rx="3" width="16" x="42" y="38"></rect>
-                        <circle cx="50" cy="46" fill="#ffffff" r="3"></circle>
-                        <rect height="6" rx="1" width="8" x="68" y="38"></rect>
-                        <rect height="8" rx="1" width="10" x="82" y="42"></rect>
-                        <rect height="6" rx="1" width="18" x="72" y="52"></rect>
-                        <rect height="12" rx="1" width="6" x="38" y="66"></rect>
-                        <rect height="6" rx="1" width="14" x="48" y="74"></rect>
-                        <rect height="8" rx="1" width="18" x="40" y="86"></rect>
-                        <rect height="8" rx="1" width="8" x="68" y="68"></rect>
-                        <rect height="6" rx="1" width="10" x="82" y="72"></rect>
-                        <rect height="8" rx="1" width="18" x="74" y="84"></rect>
-                      </svg>
+                    <div className="w-52 h-52 bg-white p-3 rounded-xl flex items-center justify-center shadow-md">
+                      <QRCodeSVG
+                        value={JSON.stringify({ id_clase: id, tipo: "asistencia_clase" })}
+                        size={180}
+                        level="M"
+                      />
                     </div>
                     <div className="text-center mt-4">
                       <span className="font-headline-sm text-headline-sm text-on-surface">Clase en Curso</span>
@@ -441,7 +420,7 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
                 students.map((student) => (
                 <div 
                   key={student.id} 
-                  className={`rounded-xl p-space-sm flex flex-col gap-2 transition-all cursor-pointer ${student.status === 'cancelado' ? 'bg-surface-container/50 opacity-60 border border-transparent' : 'premium-card-high hover:border-primary/30'} ${selectedStudent?.id === student.id ? 'ring-1 ring-primary' : ''}`}
+                  className={`rounded-xl p-space-sm flex flex-col gap-2 transition-all cursor-pointer ${student.status === 'cancelado' ? 'bg-surface-container/50 opacity-60 border border-transparent' : 'bg-surface-container-lowest border border-surface-container shadow-sm hover:border-primary/30'} ${selectedStudent?.id === student.id ? 'ring-1 ring-primary' : ''}`}
                   onClick={() => setSelectedStudent(selectedStudent?.id === student.id ? null : student)}
                 >
                   <div className="flex items-center justify-between gap-space-xs">
@@ -596,5 +575,6 @@ export default function ProfesorClasePage({ params }: { params: Promise<{ id: st
         </div>
       </div>
     </div>
+    </RoleGuard>
   );
 }

@@ -13,8 +13,16 @@ interface UrgencyClass {
   maxCapacity: number;
 }
 
+interface Professor {
+  id: string;
+  name: string;
+  last_name: string | null;
+  especialidad: string | null;
+}
+
 export default function AdminDashboardPage() {
   const [urgencies, setUrgencies] = useState<UrgencyClass[]>([]);
+  const [profesores, setProfesores] = useState<Professor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [selectedUrgency, setSelectedUrgency] = useState<UrgencyClass | null>(null);
@@ -23,7 +31,24 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     fetchUrgencies();
+    fetchProfesores();
   }, []);
+
+  async function fetchProfesores() {
+    try {
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, name, last_name, especialidad")
+        .eq("role", "profesor")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      if (data) setProfesores(data);
+    } catch (err) {
+      console.error("Error al cargar profesores:", err);
+    }
+  }
 
   async function fetchUrgencies() {
     try {
@@ -86,6 +111,10 @@ export default function AdminDashboardPage() {
   const handleReassign = async () => {
     if (!selectedUrgency || !selectedSubstitute) return;
 
+    // Buscar el profesor seleccionado para mostrar su nombre
+    const profObj = profesores.find(p => p.id === selectedSubstitute);
+    const profNombre = profObj ? `${profObj.name} ${profObj.last_name || ''}`.trim() : "Docente Suplente";
+
     // Optimistic UI
     setUrgencies(prev => prev.filter(u => u.id !== selectedUrgency.id));
     
@@ -96,14 +125,15 @@ export default function AdminDashboardPage() {
           .from("clase")
           .update({ 
             estado_clase: 'programada',
-            descripcion: `Reasignada a suplente: ${selectedSubstitute}` 
+            id_profesor: selectedSubstitute,
+            descripcion: `Reasignada a suplente: ${profNombre}` 
           })
           .eq("id_clase", parseInt(selectedUrgency.id));
       }
-      showToast(`Clase reasignada a ${selectedSubstitute} exitosamente.`);
+      showToast(`Clase reasignada a ${profNombre} exitosamente.`);
     } catch (err) {
       console.error(err);
-      showToast(`Clase reasignada a ${selectedSubstitute} (Demo)`);
+      showToast(`Clase reasignada a ${profNombre} (Demo)`);
     }
 
     setIsReassignModalOpen(false);
@@ -113,10 +143,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col w-full pb-10">
-      <section className="px-gutter-mobile pt-space-md">
-        <h1 className="font-headline-md text-headline-md text-on-surface mb-1">Buzón de Urgencias</h1>
-        <p className="font-body-sm text-body-sm text-secondary mb-space-md">
-          Gestiona las solicitudes de suplencia de los docentes.
+      <section className="px-margin-mobile pt-space-xs pb-space-md">
+        <h2 className="font-headline-md text-headline-md text-on-surface">Panel de Urgencias</h2>
+        <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Gestión de imprevistos, lesiones o ausencias docentes en tiempo real.
         </p>
 
         {isLoading ? (
@@ -192,16 +222,25 @@ export default function AdminDashboardPage() {
                 onChange={(e) => setSelectedSubstitute(e.target.value)}
                 className="w-full h-14 bg-surface-container-high border border-surface-container-highest rounded-xl px-4 font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary appearance-none"
               >
-                <option value="" disabled>Elige un profesor disponible...</option>
-                <option value="Camila Rivas">Camila Rivas (Urbano/Flow)</option>
-                <option value="Carlos 'Che' Vega">Carlos 'Che' Vega (Pole)</option>
-                <option value="Lucía Ferrer">Lucía Ferrer (Heels/Pole)</option>
-                <option value="Profesor Externo de Guardia">Profesor Externo de Guardia</option>
+                <option value="" disabled>Elige un profesor del equipo...</option>
+                {profesores.length > 0 ? (
+                  profesores.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.last_name || ''} {p.especialidad ? `(${p.especialidad})` : ''}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Camila Rivas">Camila Rivas (Urbano/Flow)</option>
+                    <option value="Carlos 'Che' Vega">Carlos 'Che' Vega (Pole)</option>
+                    <option value="Lucía Ferrer">Lucía Ferrer (Heels/Pole)</option>
+                  </>
+                )}
               </select>
             </div>
 
             <p className="font-body-sm text-body-sm text-on-surface-variant leading-normal mt-1">
-              Al confirmar, la clase volverá a estar Activa. Se notificará al nuevo profesor y a los alumnos del cambio de docente.
+              Al confirmar, la clase volverá a estar Activa. El profesor suplente verá la clase reflejada en su agenda inmediatamente.
             </p>
 
             <div className="flex flex-col gap-2 pt-2">
@@ -226,8 +265,8 @@ export default function AdminDashboardPage() {
 
       {/* Toast Notification */}
       <div className={`fixed top-20 inset-x-4 z-50 flex items-center justify-center pointer-events-none transition-all duration-300 ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
-        <div className="bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 max-w-sm">
-          <span className="material-symbols-outlined text-emerald-400 text-[20px]">verified</span>
+        <div className="bg-surface-container-highest border border-surface-container-high text-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 max-w-sm">
+          <span className="material-symbols-outlined text-primary text-[20px]">info</span>
           <span className="font-label-md text-label-md">{toastMessage}</span>
         </div>
       </div>

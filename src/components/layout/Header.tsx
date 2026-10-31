@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import BrandLogo from "@/components/ui/BrandLogo";
 
 interface HeaderProps {
   title?: string;
@@ -25,6 +26,7 @@ export default function Header({ title = "Cuerpo y Alma", subtitle = "Inicio", p
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [filter, setFilter] = useState<"todas" | "importantes" | "no_leidas">("todas");
   const unreadCount = notificaciones.filter(n => !n.leida).length;
+  const isAdmin = profileLink.startsWith("/admin");
 
   useEffect(() => {
     // 1. Cargar notificaciones iniciales (MVP: cargamos las últimas 20 para filtrar bien)
@@ -110,12 +112,9 @@ export default function Header({ title = "Cuerpo y Alma", subtitle = "Inicio", p
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe">
-        <div className="h-16 px-margin-mobile flex items-center justify-between">
+        <div className="h-16 max-w-5xl mx-auto px-margin-mobile flex items-center justify-between w-full">
           <div className="flex items-center gap-space-sm">
-            {/* Logo placeholder */}
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-on-primary">
-              CA
-            </div>
+            <BrandLogo size="sm" showText={false} />
             <div className="flex flex-col">
               <span className="font-headline-sm text-headline-sm tracking-tight text-on-surface leading-none">
                 {title}
@@ -194,48 +193,77 @@ export default function Header({ title = "Cuerpo y Alma", subtitle = "Inicio", p
                   <p className="font-body-md text-on-surface-variant">Estás al día.</p>
                 </div>
               ) : (
-                filteredNotifs.map(notif => (
-                  <Link 
-                    href="/admin/notificaciones" 
-                    key={notif.id} 
-                    onClick={(e) => {
-                      if (!notif.leida) handleMarkAsRead(notif.id, e);
-                      setIsOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl flex items-center justify-between transition-colors border ${notif.leida ? 'opacity-60 bg-surface border-surface-container-low' : 'bg-surface-container-lowest border-primary/20 shadow-sm'}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {getIconForType(notif.tipo)}
-                      <div className="flex flex-col min-w-0">
-                        <p className={`font-label-md truncate ${!notif.leida ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>
-                          {notif.titulo}
-                        </p>
-                        <p className="font-body-sm text-secondary truncate">
-                          {notif.mensaje}
-                        </p>
+                filteredNotifs.map(notif => {
+                  const content = (
+                    <div 
+                      key={notif.id} 
+                      onClick={(e) => {
+                        if (!notif.leida) handleMarkAsRead(notif.id, e);
+                        if (!isAdmin) setIsOpen(false);
+                      }}
+                      className={`p-4 rounded-2xl flex items-center justify-between transition-colors border cursor-pointer ${notif.leida ? 'opacity-60 bg-surface border-surface-container-low' : 'bg-surface-container-lowest border-primary/20 shadow-sm'}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {getIconForType(notif.tipo)}
+                        <div className="flex flex-col min-w-0">
+                          <p className={`font-label-md truncate ${!notif.leida ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>
+                            {notif.titulo}
+                          </p>
+                          <p className="font-body-sm text-secondary truncate">
+                            {notif.mensaje}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                        <span className="font-label-sm text-secondary">
+                          {new Date(notif.creado_en).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="material-symbols-outlined text-surface-variant text-[20px]">
+                          {isAdmin ? 'chevron_right' : (notif.leida ? 'done_all' : 'mark_chat_read')}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                      <span className="font-label-sm text-secondary">
-                        {new Date(notif.creado_en).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span className="material-symbols-outlined text-surface-variant text-[20px]">chevron_right</span>
-                    </div>
-                  </Link>
-                ))
+                  );
+
+                  return isAdmin ? (
+                    <Link 
+                      href="/admin/notificaciones" 
+                      key={notif.id} 
+                      onClick={(e) => {
+                        if (!notif.leida) handleMarkAsRead(notif.id, e);
+                        setIsOpen(false);
+                      }}
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    content
+                  );
+                })
               )}
             </div>
             
-            <div className="p-4 bg-surface text-center pb-safe">
-              <Link 
-                href="/admin/notificaciones" 
-                onClick={() => setIsOpen(false)}
-                className="text-[#d4af37] font-label-md font-bold hover:underline inline-flex items-center gap-1"
-              >
-                Ver historial completo
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </Link>
-            </div>
+            {isAdmin ? (
+              <div className="p-4 bg-surface text-center pb-safe">
+                <Link 
+                  href="/admin/notificaciones" 
+                  onClick={() => setIsOpen(false)}
+                  className="text-[#d4af37] font-label-md font-bold hover:underline inline-flex items-center gap-1"
+                >
+                  Ver historial completo
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="p-3 bg-surface text-center pb-safe">
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="text-secondary hover:text-on-surface font-label-md transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

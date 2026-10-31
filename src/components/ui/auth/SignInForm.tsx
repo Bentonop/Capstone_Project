@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import { Form, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useState } from "react";
-import { Image as ImageIcon, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
+import BrandLogo from "@/components/ui/BrandLogo";
 import toast from "react-hot-toast";
 import { AuthFormProps } from "./AuthForm";
 import { supabase } from "@/lib/supabase";
@@ -92,19 +93,12 @@ const SignInForm = ({ setTypeSelected }: AuthFormProps) => {
     return (
         <div>
             <div className="w-full backdrop-blur-xl py-2 rounded-4xl">
-                <div className="text-center">
-                    <div
-                        role="img"
-                        aria-label="Espacio para el logo de la empresa"
-                        className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/30"
-                    >
-                        <ImageIcon className="h-8 w-8 text-muted-foreground/60" />
-                    </div>
-                    <h1 className="lg:text-5xl md:text-4xl text-3xl font-semibold text-center my-4">Iniciar Sesión</h1>
-                    <p className="text-sm text-muted-foreground mb-8">
-                        Bienvenida/o a Cuerpo y Alma.
+                <div className="text-center mb-6">
+                    <BrandLogo size="lg" showText={true} className="mb-2" />
+                    <h2 className="text-2xl font-bold tracking-tight text-on-surface mt-3">Iniciar Sesión</h2>
+                    <p className="text-sm text-secondary mt-1">
+                        Ingresa tus credenciales para acceder a tu cuenta.
                     </p>
-                    <p>Ingresa tu correo y contraseña para continuar.</p>
                 </div>
 
                 

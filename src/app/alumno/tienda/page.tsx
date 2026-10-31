@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 export default function TiendaPage() {
   const [planes, setPlanes] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export default function TiendaPage() {
   const procesarCompra = async () => {
     if (!selectedPlan || !paymentMethod) return;
     if (paymentMethod === "transferencia" && !comprobanteUrl.trim()) {
-      alert("Por favor ingresa el Nro de Comprobante.");
+      toast.error("Por favor adjunta o ingresa el comprobante de transferencia.");
       return;
     }
 
@@ -117,7 +118,7 @@ export default function TiendaPage() {
       
     } catch (error) {
       console.error("Error al comprar", error);
-      alert("Error al procesar la compra. Revisa que las tablas SQL estén creadas.");
+      toast.error("Error al procesar la compra. Intenta nuevamente.");
     } finally {
       setIsProcessing(false);
     }

@@ -1,4 +1,4 @@
--- =========================================================================
+﻿-- =========================================================================
 -- PROYECTO CAPSTONE (PTY4614): SISTEMA WEB INTEGRAL CUERPO Y ALMA
 -- EVIDENCIA DE INGENIERÍA: POLÍTICAS DE SEGURIDAD ROW LEVEL SECURITY (RLS)
 -- AUTORES: José Rivera (Backend/QA Lead), Benjamín García, Manuel Campos
@@ -170,6 +170,67 @@ USING (
     OR EXISTS (
         SELECT 1 FROM public.profiles 
         WHERE profiles.id = auth.uid() AND profiles.role = 'administrador'
+    )
+);
+
+-- =========================================================================
+-- 5.1 POLÍTICAS DE SEGURIDAD PARA TABLA: ASISTENCIA (CONTROL QR)
+-- =========================================================================
+
+-- Lectura: Profesor de la clase, alumno dueño de la reserva o admin
+CREATE POLICY "Asistencia: Consulta autorizada"
+ON public.asistencia
+FOR SELECT
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.reserva
+        JOIN public.clase ON clase.id_clase = reserva.id_clase
+        WHERE reserva.id_reserva = asistencia.id_reserva
+        AND (
+            reserva.id_usuario = auth.uid()
+            OR clase.id_profesor = auth.uid()
+            OR EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = auth.uid() AND profiles.role = 'administrador'
+            )
+        )
+    )
+);
+
+-- Inserción y Marcado (Tanto profesor con cámara como alumno autoservicio)
+CREATE POLICY "Asistencia: Registro y marcado de asistencia"
+ON public.asistencia
+FOR ALL
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.reserva
+        JOIN public.clase ON clase.id_clase = reserva.id_clase
+        WHERE reserva.id_reserva = asistencia.id_reserva
+        AND (
+            reserva.id_usuario = auth.uid()
+            OR clase.id_profesor = auth.uid()
+            OR EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = auth.uid() AND profiles.role = 'administrador'
+            )
+        )
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.reserva
+        JOIN public.clase ON clase.id_clase = reserva.id_clase
+        WHERE reserva.id_reserva = asistencia.id_reserva
+        AND (
+            reserva.id_usuario = auth.uid()
+            OR clase.id_profesor = auth.uid()
+            OR EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = auth.uid() AND profiles.role = 'administrador'
+            )
+        )
     )
 );
 
